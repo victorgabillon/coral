@@ -14,7 +14,7 @@ repos:
      language: system
      types: [python]
      pass_filenames: false
-     args: [src/valanga]
+     args: [src/coral]
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0
