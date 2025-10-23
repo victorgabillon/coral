@@ -1,2 +1,2 @@
 # coral
-neural networks
+neural networks library
