@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from coral.utils.logger import coral_logger
-from coral.utils.small_tools import resolve_package_path, path
+from coral.utils.small_tools import path, resolve_package_path
 
 
 class ChiNN(nn.Module):
@@ -54,9 +54,7 @@ class ChiNN(nn.Module):
         try:  # load
             resolved_path = resolve_package_path(str(path_to_param_file))
             with open(resolved_path, "rb") as fileNNR:
-                coral_logger.info(
-                    "loading the existing param file %s", resolved_path
-                )
+                coral_logger.info("loading the existing param file %s", resolved_path)
                 if torch.cuda.is_available():
                     self.load_state_dict(torch.load(fileNNR))
                 else:

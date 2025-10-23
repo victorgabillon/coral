@@ -2,14 +2,13 @@
 This module contains utility functions and classes for small tools.
 """
 
-
 import os
 import typing
 from importlib.resources import files
 from pathlib import Path
 
-
 path = typing.Annotated[str | os.PathLike[str], "path"]
+
 
 def resolve_package_path(path_to_file: str | Path) -> str:
     """
@@ -35,4 +34,3 @@ def resolve_package_path(path_to_file: str | Path) -> str:
 
         return str(resource)  # You can also use `.as_posix()` if you need POSIX format
     return str(path_to_file)
-
