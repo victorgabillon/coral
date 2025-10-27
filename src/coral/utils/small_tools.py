@@ -7,6 +7,8 @@ import typing
 from importlib.resources import files
 from pathlib import Path
 
+import yaml
+
 path = typing.Annotated[str | os.PathLike[str], "path"]
 
 
@@ -34,3 +36,19 @@ def resolve_package_path(path_to_file: str | Path) -> str:
 
         return str(resource)  # You can also use `.as_posix()` if you need POSIX format
     return str(path_to_file)
+
+
+def yaml_fetch_args_in_file(path_file: path) -> dict[typing.Any, typing.Any]:
+    """
+    Fetch arguments from a YAML file.
+
+    Args:
+        path_file: The path to the YAML file.
+
+    Returns:
+        A dictionary containing the arguments.
+
+    """
+    with open(path_file, "r", encoding="utf-8") as file:
+        args: dict[typing.Any, typing.Any] = yaml.load(file, Loader=yaml.FullLoader)
+    return args

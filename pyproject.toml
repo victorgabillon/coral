@@ -7,8 +7,25 @@ name = "coral"
 version = "0.1.0"
 description = "Shared types and utilities for evalaution"
 requires-python = ">=3.13"
+
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+
+readme = { file = "README.md", content-type = "text/markdown" }
+
+authors = [
+  { name = "Victor Gabillon", email = "victorgabillon@gmail.com" }
+]
+
 dependencies = [
-"torch"
+"torch",
+    "valanga @ git+https://github.com/victorgabillon/valanga.git@main",
+    "PyYAML",
+    "dacite",
+    "rich",
+    "chess",
+
+
 ]
 
 
@@ -48,6 +65,7 @@ dev = [
 
     # Pre-commit hooks
     "pre-commit"
+
 
 ]
 
