@@ -25,8 +25,8 @@ from coral.neural_networks.models.transformer_one import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
-from coral.neural_networks.nn_content_evaluator import (
-    NNBWContentEvaluator,
+from coral.neural_networks.nn_state_evaluator import (
+    NNBWStateEvaluator,
 )
 from coral.neural_networks.NNModelTypeArgs import (
     NNModelTypeArgs,
@@ -206,7 +206,7 @@ def create_nn_from_folder_path_and_existing_model(
 def create_nn_content_eval_from_folder_path_and_existing_model(
     path_to_nn_folder: path,
     content_to_input_convert: ContentToInputFunction,
-) -> tuple[NNBWContentEvaluator, NeuralNetArchitectureArgs]:
+) -> tuple[NNBWStateEvaluator, NeuralNetArchitectureArgs]:
     """
     Create a neural network content evaluator.
 
@@ -222,56 +222,56 @@ def create_nn_content_eval_from_folder_path_and_existing_model(
         folder_path=path_to_nn_folder
     )
 
-    nn_content_evaluator = create_nn_content_eval_from_nn_and_architecture_args(
+    nn_state_evaluator = create_nn_state_eval_from_nn_and_architecture_args(
         nn=net,
         nn_architecture_args=nn_architecture_args,
         content_to_input_convert=content_to_input_convert,
     )
-    return nn_content_evaluator, nn_architecture_args
+    return nn_state_evaluator, nn_architecture_args
 
 
-def create_nn_content_eval_from_nn_and_architecture_args(
+def create_nn_state_eval_from_nn_and_architecture_args(
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction,
     nn: ChiNN,
-) -> NNBWContentEvaluator:
+) -> NNBWStateEvaluator:
     output_and_value_converter: OutputValueConverter = create_output_converter(
         model_output_type=nn_architecture_args.model_output_type
     )
 
-    return NNBWContentEvaluator(
+    return NNBWStateEvaluator(
         net=nn,
         output_and_value_converter=output_and_value_converter,
         content_to_input_convert=content_to_input_convert,
     )
 
 
-def create_nn_content_eval_from_architecture_args(
+def create_nn_state_eval_from_architecture_args(
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction,
-) -> NNBWContentEvaluator:
+) -> NNBWStateEvaluator:
     nn = create_nn(nn_type_args=nn_architecture_args.model_type_args)
     nn.init_weights()
 
-    return create_nn_content_eval_from_nn_and_architecture_args(
+    return create_nn_state_eval_from_nn_and_architecture_args(
         nn_architecture_args=nn_architecture_args,
         nn=nn,
         content_to_input_convert=content_to_input_convert,
     )
 
 
-def create_nn_content_eval_from_nn_parameters_file_and_existing_model(
+def create_nn_state_eval_from_nn_parameters_file_and_existing_model(
     model_weights_file_name: path,
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction,
-) -> NNBWContentEvaluator:
+) -> NNBWStateEvaluator:
     net: ChiNN
     net, nn_architecture_args = create_nn_from_param_path_and_architecture_args(
         model_weights_file_name=model_weights_file_name,
         nn_architecture_args=nn_architecture_args,
     )
 
-    return create_nn_content_eval_from_nn_and_architecture_args(
+    return create_nn_state_eval_from_nn_and_architecture_args(
         nn_architecture_args=nn_architecture_args,
         nn=net,
         content_to_input_convert=content_to_input_convert,

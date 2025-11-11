@@ -43,6 +43,4 @@ src/coral/
 
 GPL-3.0-only
 
-## Author
 
-Victor Gabillon (victorgabillon@gmail.com)

@@ -18,7 +18,7 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
-class NNBWContentEvaluator:
+class NNBWStateEvaluator:
     """
     The Generic Neural network class for board evaluation
 
