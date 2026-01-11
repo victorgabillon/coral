@@ -1,3 +1,5 @@
+"""Transformer-based neural network model for board evaluation."""
+
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -62,6 +64,7 @@ class Head(nn.Module):
     """one head of self-attention"""
 
     def __init__(self, n_embd: int, head_size: int, dropout_ratio: float):
+        """Initialize attention head layers."""
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=True)
         self.query = nn.Linear(n_embd, head_size, bias=True)
@@ -102,6 +105,7 @@ class MultiHeadAttention(nn.Module):
     def __init__(
         self, num_heads: int, head_size: int, dropout_ratio: float, n_embd: int
     ) -> None:
+        """Initialize multi-head attention layers."""
         super().__init__()
         self.heads = nn.ModuleList(
             [
@@ -115,6 +119,7 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout_ratio)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Compute multi-head attention output for the input tensor."""
         out: torch.Tensor = torch.empty(1)  # to make mypy and jit happy
         out = torch.cat([h(x) for h in self.heads], dim=-1)
         out = self.dropout(self.proj(out))
@@ -125,6 +130,7 @@ class FeedFoward(nn.Module):
     """a simple linear layer followed by a non-linearity"""
 
     def __init__(self, n_embd: int, dropout_ratio: float) -> None:
+        """Initialize the feed-forward network."""
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(n_embd, 4 * n_embd),
@@ -138,6 +144,7 @@ class FeedFoward(nn.Module):
     # self.lin2 =    nn.Linear(4 * n_embd, n_embd)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply the feed-forward network to the input tensor."""
         # xx=self.re1(self.lin(x))
         # a=self.lin2(xx)
         a: torch.Tensor = self.net(x)
@@ -150,6 +157,7 @@ class Block(nn.Module):
     """Transformer block: communication followed by computation"""
 
     def __init__(self, n_embd: int, n_head: int, dropout_ratio: float) -> None:
+        """Initialize a transformer block with attention and feed-forward layers."""
         # n_embd: embedding dimension, n_head: the number of heads we'd like
         super().__init__()
         head_size = n_embd // n_head
@@ -163,6 +171,7 @@ class Block(nn.Module):
         self.ln2 = nn.LayerNorm(n_embd)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run the transformer block forward pass."""
         # print('zzyyy',x,self.ln1(x))
 
         y = self.sa(self.ln1(x))
@@ -173,7 +182,10 @@ class Block(nn.Module):
 
 
 class TransformerOne(ChiNN):
+    """Transformer neural network implementation for board evaluation."""
+
     def __init__(self, args: TransformerArgs) -> None:
+        """Initialize the TransformerOne model with the provided arguments."""
         super(TransformerOne, self).__init__()
 
         self.board_embedding_table = nn.Parameter(
@@ -195,11 +207,13 @@ class TransformerOne(ChiNN):
         self.apply(self._init_weights)
 
     def _init_weights(self, module: Any) -> None:
+        """Initialize linear layer weights and biases."""
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
             torch.nn.init.zeros_(module.bias)
 
     def forward(self, indices: list[list[int]]) -> torch.Tensor:
+        """Run the transformer forward pass on indexed input data."""
         # idx and targets are both (B,T) tensor of integers
         y = self.board_embedding_table[
             indices, :

@@ -235,6 +235,7 @@ def create_nn_content_eval_from_nn_and_architecture_args(
     content_to_input_convert: ContentToInputFunction,
     nn: ChiNN,
 ) -> NNBWContentEvaluator:
+    """Create a content evaluator from a network and architecture args."""
     output_and_value_converter: TurnOutputValueConverter = create_output_converter(
         model_output_type=nn_architecture_args.model_output_type
     )
@@ -250,6 +251,7 @@ def create_nn_content_eval_from_architecture_args(
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction,
 ) -> NNBWContentEvaluator:
+    """Create a content evaluator by instantiating a network from args."""
     nn = create_nn(nn_type_args=nn_architecture_args.model_type_args)
     nn.init_weights()
 
@@ -265,6 +267,7 @@ def create_nn_content_eval_from_nn_parameters_file_and_existing_model(
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction,
 ) -> NNBWContentEvaluator:
+    """Create a content evaluator from weights and architecture args."""
     net: ChiNN
     net, nn_architecture_args = create_nn_from_param_path_and_architecture_args(
         model_weights_file_name=model_weights_file_name,

@@ -1,4 +1,4 @@
-# logger_module.py
+"""Logging helpers for the coral package."""
 
 import logging
 from contextlib import contextmanager

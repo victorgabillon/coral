@@ -42,6 +42,7 @@ class MultiLayerPerceptronArgs:
     list_of_activation_functions: list[ActivationFunctionType]
 
     def __str__(self) -> str:
+        """Return a readable summary of the model arguments."""
         neurons = "-".join(map(str, self.number_neurons_per_layer))
         activations = "-".join(act.value for act in self.list_of_activation_functions)
         return f"Type: {self.type}, Neurons: [{neurons}], Activations: [{activations}]"

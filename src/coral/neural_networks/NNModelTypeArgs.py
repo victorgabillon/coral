@@ -1,3 +1,5 @@
+"""Type aliases for neural network model argument variants."""
+
 from typing import TypeAlias
 
 from coral.neural_networks.models.multi_layer_perceptron import (
