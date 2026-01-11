@@ -1,3 +1,5 @@
+"""Dataclasses describing neural network architecture arguments."""
+
 from dataclasses import dataclass
 
 from coral.neural_networks.NNModelTypeArgs import (

@@ -31,7 +31,9 @@ class NNContentEvaluator(Protocol):
     output_and_value_converter: OutputValueConverter
     content_to_input_convert: ContentToInputFunction
 
-    def value_white(self, bw_content: State) -> float: ...
+    def value_white(self, bw_content: State) -> float:
+        """Return the white player value for a given state."""
+        ...
 
 
 class StateWithTurn(State, Protocol):
