@@ -10,10 +10,7 @@ Methods:
     forward(x: torch.Tensor) -> torch.Tensor: Performs the forward pass of the neural network.
     init_weights(file: str) -> None: Initializes the weights of the model.
     print_param() -> None: Prints the parameters of the model.
-    print_input(input: torch.Tensor) -> None: Prints the input tensor.
 
-Helper Functions:
-    print_piece_param(i: int, vec: torch.Tensor) -> None: Prints the parameters of a specific piece.
 
 """
 
@@ -21,11 +18,11 @@ from dataclasses import dataclass
 from typing import Any, Callable, Literal, cast
 
 import torch
-import torch.nn as nn
 import yaml
+from torch import nn
 
 from coral.chi_nn import ChiNN
-from coral.neural_networks.NNModelType import (
+from coral.neural_networks.nn_model_type import (
     ActivationFunctionType,
     NNModelType,
     activation_map,
@@ -120,7 +117,7 @@ class MultiLayerPerceptron(ChiNN):
 
     def __init__(self, args: MultiLayerPerceptronArgs) -> None:
         """Constructor for the NetPP2D2_2_PRELU class. Initializes the neural network layers."""
-        super(MultiLayerPerceptron, self).__init__()
+        super().__init__()
 
         self.model: Callable[[torch.Tensor], torch.Tensor] = build_sequential(
             layers=args.number_neurons_per_layer,
@@ -146,17 +143,7 @@ class MultiLayerPerceptron(ChiNN):
 
     def init_weights(self) -> None:
         """Initialize the weights of the neural network."""
-        pass
-
-    def print_input(self, input: torch.Tensor) -> None:
-        """
-        Print the input tensor.
-
-        Args:
-            input (torch.Tensor): The input tensor.
-        """
-
-    ...
+        return
 
     def log_readable_model_weights_to_file(self, file_path: str) -> None:
         """
@@ -168,10 +155,10 @@ class MultiLayerPerceptron(ChiNN):
         assert isinstance(self.model, nn.Sequential)
         layers_data = extract_sequential_model_data(self.model)
 
-        with open(file_path, "w") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(layers_data, f, default_flow_style=False, sort_keys=False)
 
-        coral_logger.info(f"Model weights successfully written to {file_path}")
+        coral_logger.info("Model weights successfully written to %s", file_path)
 
     def print_param(self) -> None:
         """
@@ -184,17 +171,3 @@ class MultiLayerPerceptron(ChiNN):
         layers_data = extract_sequential_model_data(self.model)
         yaml_str = yaml.dump(layers_data, default_flow_style=False, sort_keys=False)
         coral_logger.info(yaml_str)
-
-
-def print_piece_param(i: int, vec: torch.Tensor) -> None:
-    """
-    Prints the piece parameter at index i from the given tensor.
-
-    Args:
-        i (int): The index of the piece parameter to print.
-        vec (torch.Tensor): The tensor containing the piece parameters.
-
-    Returns:
-        None
-    """
-    ...

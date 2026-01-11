@@ -23,6 +23,6 @@ def create_output_converter(
         case PointOfView.PLAYER_TO_MOVE:
             output_value_converter = PlayerToMoveValueToValueWhiteConverter()
         case other:
-            raise Exception(f"Not a valid output converter: {other} in file{__name__}")
+            raise ValueError(f"Not a valid output converter: {other} in file{__name__}")
 
     return output_value_converter

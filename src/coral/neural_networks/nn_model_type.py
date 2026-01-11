@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Callable
 
-import torch.nn as nn
+from torch import nn
 
 
 class NNModelType(str, Enum):

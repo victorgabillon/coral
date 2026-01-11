@@ -17,7 +17,7 @@ from coral.neural_networks.models.multi_layer_perceptron import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
-from coral.neural_networks.NNModelType import (
+from coral.neural_networks.nn_model_type import (
     ActivationFunctionType,
     NNModelType,
 )
@@ -25,7 +25,7 @@ from coral.neural_networks.output_converters.model_output_type import (
     ModelOutputType,
 )
 
-NNNetEvalLiteralString: Literal["neural_network"] = "neural_network"
+NN_NET_EVAL_LITERAL_STRING: Literal["neural_network"] = "neural_network"
 
 
 @dataclass
@@ -42,7 +42,7 @@ class NeuralNetBoardEvalArgs:
             The type of node evaluator, which must be set to 'NeuralNetwork'.
     """
 
-    type: Literal["neural_network"] = NNNetEvalLiteralString
+    type: Literal["neural_network"] = NN_NET_EVAL_LITERAL_STRING
     neural_nets_model_and_architecture: NeuralNetModelsAndArchitecture = field(
         default_factory=lambda: NeuralNetModelsAndArchitecture(
             model_weights_file_name="*default*",
@@ -68,7 +68,7 @@ class NeuralNetBoardEvalArgs:
         Raises:
             ValueError: If the type is not NodeEvaluatorTypes.NeuralNetwork.
         """
-        if self.type != NNNetEvalLiteralString:
+        if self.type != NN_NET_EVAL_LITERAL_STRING:
             raise ValueError("Expecting neural_network as name")
         if (
             self.neural_nets_model_and_architecture.model_weights_file_name

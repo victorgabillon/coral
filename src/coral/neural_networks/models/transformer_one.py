@@ -5,32 +5,32 @@ from typing import Any, Literal
 
 import chess
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.nn import functional as F
 
 from coral.chi_nn import ChiNN
-from coral.neural_networks.NNModelType import NNModelType
+from coral.neural_networks.nn_model_type import NNModelType
 
-number_of_squares = len(chess.SQUARES)
-number_pieces_types = len(chess.PIECE_TYPES)
-number_colors = len(chess.COLORS)
-number_occupancy_types = (
-    number_pieces_types * number_colors + 1
+NUMBER_SQUARES = len(chess.SQUARES)
+NUMBER_PIECES_TYPES = len(chess.PIECE_TYPES)
+NUMBER_COLORS = len(chess.COLORS)
+NUMBER_OCCUPANCY_TYPES = (
+    NUMBER_PIECES_TYPES * NUMBER_COLORS + 1
 )  # could be empty (+1) or one of the pieces in black or white
-len_square_tensor = number_of_squares * number_occupancy_types
-len_all_possible_tensor_input = (
-    len_square_tensor + 1
+LEN_SQUARE_TENSOR = NUMBER_SQUARES * NUMBER_OCCUPANCY_TYPES
+LEN_ALL_POSSIBLE_TENSOR_INPUT = (
+    LEN_SQUARE_TENSOR + 1
 )  # +1 for the vector that will bear the output embedding
-number_parallel_tracks = number_of_squares + 1
+NUMBER_PARALLEL_TRACKS = NUMBER_SQUARES + 1
 
 
 @dataclass()
 class TransformerArgs:
     """Transformer model hyperparameters."""
 
-    number_occupancy_types: int = number_occupancy_types
-    len_square_tensor: int = len_square_tensor
-    number_pieces_types: int = number_pieces_types
+    number_occupancy_types: int = NUMBER_OCCUPANCY_TYPES
+    len_square_tensor: int = LEN_SQUARE_TENSOR
+    number_pieces_types: int = NUMBER_PIECES_TYPES
 
     type: Literal[NNModelType.TRANSFORMER] = NNModelType.TRANSFORMER
     n_embd: int = 27
@@ -186,10 +186,10 @@ class TransformerOne(ChiNN):
 
     def __init__(self, args: TransformerArgs) -> None:
         """Initialize the TransformerOne model with the provided arguments."""
-        super(TransformerOne, self).__init__()
+        super().__init__()
 
         self.board_embedding_table = nn.Parameter(
-            torch.randn(len_all_possible_tensor_input, args.n_embd)
+            torch.randn(LEN_ALL_POSSIBLE_TENSOR_INPUT, args.n_embd)
         )
 
         self.blocks = nn.Sequential(
@@ -199,12 +199,17 @@ class TransformerOne(ChiNN):
             ]
         )
         self.ln_f = nn.LayerNorm(args.n_embd)  # final layer norm
-        self.lm_head = nn.Linear(number_parallel_tracks * args.n_embd, 1)
+        self.lm_head = nn.Linear(NUMBER_PARALLEL_TRACKS * args.n_embd, 1)
 
         self.tan_h = nn.Tanh()
 
         # better init, not covered in the original GPT video, but important, will cover in followup video
         self.apply(self._init_weights)
+
+    def init_weights(self) -> None:
+        """Initialize model weights."""
+        # TODO fix the weird init_weights logics
+        return
 
     def _init_weights(self, module: Any) -> None:
         """Initialize linear layer weights and biases."""
@@ -227,20 +232,6 @@ class TransformerOne(ChiNN):
 
         return x
 
-    def compute_representation(
-        self, node: Any, parent_node: Any, board_modifications: Any
-    ) -> None:
-        """
-        Compute the input representation for the given node.
-
-        Args:
-            node (Any): Current node.
-            parent_node (Any): Parent node.
-            board_modifications (Any): Board modifications.
-        """
-        ...
-        raise Exception(f"to be recoded in {__name__}")
-
     def get_nn_input(self, node: Any) -> None:
         """
         Get the input tensor for the given node.
@@ -251,7 +242,7 @@ class TransformerOne(ChiNN):
         Returns:
             None
         """
-        raise Exception(f"to be recoded in {__name__}")
+        raise NotImplementedError(f"to be recoded in {__name__}")
 
     def print_param(self) -> None:
         """

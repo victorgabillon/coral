@@ -28,7 +28,7 @@ from coral.neural_networks.neural_net_architecture_args import (
 from coral.neural_networks.nn_content_evaluator import (
     NNBWContentEvaluator,
 )
-from coral.neural_networks.NNModelTypeArgs import (
+from coral.neural_networks.nn_model_type_args import (
     NNModelTypeArgs,
 )
 from coral.neural_networks.output_converters.factory import (

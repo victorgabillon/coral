@@ -161,7 +161,7 @@ extension-pkg-whitelist = ["PyQt5", "PySide6"]
 max-line-length = 88
 
 #[tool.pylint.messages_control]
-disable = ["C0301"]
+disable = ["C0301","W0511","R0903",    "unnecessary-ellipsis","R0902"]
 
 [tool.pylint.typecheck]
 # Optional: same as init-hook in .pylintrc
