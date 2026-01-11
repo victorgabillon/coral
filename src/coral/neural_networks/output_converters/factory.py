@@ -6,13 +6,15 @@ from coral.neural_networks.output_converters.model_output_type import (
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     IdentityConverter,
-    OutputValueConverter,
     PlayerToMoveValueToValueWhiteConverter,
+    TurnOutputValueConverter,
 )
 
 
-def create_output_converter(model_output_type: ModelOutputType) -> OutputValueConverter:
-    output_value_converter: OutputValueConverter
+def create_output_converter(
+    model_output_type: ModelOutputType,
+) -> TurnOutputValueConverter:
+    output_value_converter: TurnOutputValueConverter
     point_of_view: PointOfView = model_output_type.point_of_view
     match point_of_view:
         case PointOfView.WHITE:

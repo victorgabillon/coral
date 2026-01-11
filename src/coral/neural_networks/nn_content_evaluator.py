@@ -2,11 +2,14 @@
 Module for the Neural Network Board Evaluator
 """
 
+from typing import Protocol
+
 import torch
 from valanga import (
     Color,
-    FloatyBoardEvaluation,
+    FloatyStateEvaluation,
     HasTurn,
+    State,
 )
 
 from coral.chi_nn import ChiNN
@@ -15,7 +18,33 @@ from coral.neural_networks.input_converters.content_to_input import (
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     OutputValueConverter,
+    TurnOutputValueConverter,
 )
+
+
+class NNContentEvaluator(Protocol):
+    """
+    Protocol for Neural Network Content Evaluator
+    """
+
+    net: ChiNN
+    output_and_value_converter: OutputValueConverter
+    content_to_input_convert: ContentToInputFunction
+
+    def value_white(self, bw_content: State) -> float: ...
+
+
+class StateWithTurn(State, Protocol):
+    """
+    Protocol for a state with turn information.
+    """
+
+    @property
+    def turn(self) -> Color:
+        """
+        The color of the player to move.
+        """
+        ...
 
 
 class NNBWContentEvaluator:
@@ -29,14 +58,15 @@ class NNBWContentEvaluator:
     """
 
     net: ChiNN
-    output_and_value_converter: OutputValueConverter
+    output_and_value_converter: TurnOutputValueConverter
     content_to_input_convert: ContentToInputFunction
 
     def __init__(
         self,
         net: ChiNN,
-        output_and_value_converter: OutputValueConverter,
+        output_and_value_converter: TurnOutputValueConverter,
         content_to_input_convert: ContentToInputFunction,
+        script: bool = True,
     ) -> None:
         """
         Initialize the NNBoardEvaluator
@@ -46,12 +76,12 @@ class NNBWContentEvaluator:
             output_and_value_converter (OutputValueConverter): The converter for output values
             content_to_input_converter (BoardToInputFunction): The converter for board to input tensor
         """
-        self.net = net
-        self.my_scripted_model = torch.jit.script(net)
+        self.model = torch.jit.script(net) if script else net
+        self.model.eval()  # do once
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, bw_content: HasTurn) -> float:
+    def value_white(self, bw_content: StateWithTurn) -> float:
         """
         Evaluate the value for the white player
 
@@ -61,16 +91,13 @@ class NNBWContentEvaluator:
         Returns:
             float: The value for the white player
         """
-        self.my_scripted_model.eval()
-        input_layer: torch.Tensor = self.content_to_input_convert(
-            content_with_turn=bw_content
-        )
-        torch.no_grad()
-        output_layer: torch.Tensor = self.my_scripted_model(input_layer)
-        torch.no_grad()
-        content_evaluation: FloatyBoardEvaluation = (
+        input_layer: torch.Tensor = self.content_to_input_convert(state=bw_content)
+        with torch.no_grad():
+            output_layer = self.model(input_layer)
+
+        content_evaluation: FloatyStateEvaluation = (
             self.output_and_value_converter.to_content_evaluation(
-                output_nn=output_layer, color_to_play=bw_content.turn
+                output_nn=output_layer, state=bw_content
             )
         )
         value_white: float | None = content_evaluation.value_white
@@ -78,8 +105,8 @@ class NNBWContentEvaluator:
         return value_white
 
     def evaluate(
-        self, input_layer: torch.Tensor, color_to_play: Color
-    ) -> FloatyBoardEvaluation:
+        self, input_layer: torch.Tensor, state: HasTurn
+    ) -> FloatyStateEvaluation:
         """
         Evaluate the board position
 
@@ -90,15 +117,14 @@ class NNBWContentEvaluator:
         Returns:
             FloatyBoardEvaluation: The evaluation of the board position
         """
-        self.my_scripted_model.eval()
-        torch.no_grad()
+        self.model.eval()
+        with torch.no_grad():
+            # run the batch of input_converters into the NN and get the batch of output_converters
+            output_layer = self.model(input_layer)
 
-        # run the batch of input_converters into the NN and get the batch of output_converters
-        output_layer = self.my_scripted_model(input_layer)
+            # translate the NN output batch into a proper Board Evaluations classes in a list
+            state_evaluations = self.output_and_value_converter.to_content_evaluation(
+                output_nn=output_layer, state=state
+            )
 
-        # translate the NN output batch into a proper Board Evaluations classes in a list
-        board_evaluations = self.output_and_value_converter.to_content_evaluation(
-            output_nn=output_layer, color_to_play=color_to_play
-        )
-
-        return board_evaluations
+        return state_evaluations

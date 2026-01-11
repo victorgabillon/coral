@@ -38,7 +38,7 @@ from coral.utils.small_tools import path, yaml_fetch_args_in_file
 
 if TYPE_CHECKING:
     from coral.neural_networks.output_converters.output_value_converter import (
-        OutputValueConverter,
+        TurnOutputValueConverter,
     )
 
 
@@ -235,7 +235,7 @@ def create_nn_content_eval_from_nn_and_architecture_args(
     content_to_input_convert: ContentToInputFunction,
     nn: ChiNN,
 ) -> NNBWContentEvaluator:
-    output_and_value_converter: OutputValueConverter = create_output_converter(
+    output_and_value_converter: TurnOutputValueConverter = create_output_converter(
         model_output_type=nn_architecture_args.model_output_type
     )
 

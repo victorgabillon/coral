@@ -19,7 +19,7 @@ authors = [
 
 dependencies = [
 "torch",
-    "valanga @ git+https://github.com/victorgabillon/valanga.git@main",
+    "valanga",
     "PyYAML",
     "dacite",
     "rich",
@@ -37,6 +37,18 @@ test = [
     "pytest>=8.4.1",
     "coverage",
     "pytest-cov>=6.0.0"
+]
+
+
+lint = [
+  "ruff>=0.14.1",
+  "pylint>=3.3.8",
+]
+
+typecheck = [
+  "mypy>=1.18.2",
+  "pyright[nodejs]>=1.1.408",
+  "types-PyYAML>=6.0.12.12",
 ]
 
 
@@ -164,3 +176,87 @@ reportUnusedImport = true
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportPrivateImportUsage = false
+
+
+#################### TOX ####################
+
+[tool.tox]
+min_version = "4.30.2"
+env_list = ["py313", "lint", "typecheck"]
+isolated_build = true
+
+[tool.tox.env_run_base]
+base_python = ["python3.13"]
+set_env = { PIP_NO_CACHE_DIR = "1" }
+
+# ----------------
+# Tests (realistic)
+# ----------------
+[tool.tox.env.py313]
+description = "Run tests"
+extras = ["test"]
+commands_pre = [
+  ["python", "-m", "pip", "install", "--upgrade", "pip"],
+  # CPU-only torch (keeps CI stable and lighter)
+  ["python", "-m", "pip", "install", "--only-binary=:all:", "--index-url", "https://download.pytorch.org/whl/cpu", "torch"],
+]
+commands = [
+  ["pytest", "{posargs}"],
+]
+
+# ----------------
+# Lint (fast)
+# ----------------
+[tool.tox.env.lint]
+description = "ruff + pylint (fast, no package build/install)"
+package = "skip"
+deps = [
+  # runtime deps needed for imports/type inference in pylint
+  "torch",
+  "PyYAML",
+  "dacite",
+  "rich",
+  "chess",
+  # IMPORTANT: replace local file path with a normal dependency for CI.
+  # If valanga is published, use "valanga>=0.1.2".
+  # If not, install from VCS or let CI install it separately.
+  "valanga",
+
+  # tools
+  "ruff>=0.14.1",
+  "pylint>=3.3.8",
+]
+set_env = { PYTHONPATH = "{toxinidir}/src" }
+commands = [
+  ["python", "-m", "ruff", "check", "src", "tests"],
+  ["python", "-m", "ruff", "format", "--check", "src", "tests"],
+  ["python", "-m", "pylint", "src/coral"],
+]
+
+# ----------------
+# Typecheck (fast)
+# ----------------
+[tool.tox.env.typecheck]
+description = "mypy + pyright (fast, no package build/install)"
+package = "skip"
+deps = [
+  # runtime deps to avoid import noise
+  "torch",
+  "PyYAML",
+  "dacite",
+  "rich",
+  "chess",
+  "valanga",
+
+  # tools
+  "mypy>=1.18.2",
+  "pyright[nodejs]>=1.1.408",
+  "types-PyYAML>=6.0.12.12",
+]
+set_env = { MYPYPATH = "{toxinidir}/src" }
+commands = [
+  ["python", "-m", "mypy", "--config-file", "pyproject.toml", "src/coral"],
+  ["python", "-m", "pyright", "src/coral"],
+]
+
+#################### END TOX ####################
