@@ -6,10 +6,10 @@ from typing import Protocol
 
 import torch
 from valanga import (
-    Color,
     FloatyStateEvaluation,
     HasTurn,
     State,
+    TurnState,
 )
 
 from coral.chi_nn import ChiNN
@@ -33,19 +33,6 @@ class NNContentEvaluator(Protocol):
 
     def value_white(self, bw_content: State) -> float:
         """Return the white player value for a given state."""
-        ...
-
-
-class StateWithTurn(State, Protocol):
-    """
-    Protocol for a state with turn information.
-    """
-
-    @property
-    def turn(self) -> Color:
-        """
-        The color of the player to move.
-        """
         ...
 
 
@@ -83,7 +70,7 @@ class NNBWContentEvaluator:
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, bw_content: StateWithTurn) -> float:
+    def value_white(self, state: TurnState) -> float:
         """
         Evaluate the value for the white player
 
@@ -93,13 +80,13 @@ class NNBWContentEvaluator:
         Returns:
             float: The value for the white player
         """
-        input_layer: torch.Tensor = self.content_to_input_convert(state=bw_content)
+        input_layer: torch.Tensor = self.content_to_input_convert(state=state)
         with torch.no_grad():
             output_layer = self.model(input_layer)
 
         content_evaluation: FloatyStateEvaluation = (
             self.output_and_value_converter.to_content_evaluation(
-                output_nn=output_layer, state=bw_content
+                output_nn=output_layer, state=state
             )
         )
         value_white: float | None = content_evaluation.value_white
