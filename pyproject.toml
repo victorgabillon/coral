@@ -182,7 +182,7 @@ reportPrivateImportUsage = false
 
 [tool.tox]
 min_version = "4.30.2"
-env_list = ["py313", "lint", "typecheck"]
+env_list = ["py313", "lint", "typecheck", "build"]
 isolated_build = true
 
 [tool.tox.env_run_base]
@@ -257,6 +257,21 @@ set_env = { MYPYPATH = "{toxinidir}/src" }
 commands = [
   ["python", "-m", "mypy", "--config-file", "pyproject.toml", "src/coral"],
   ["python", "-m", "pyright", "src/coral"],
+]
+
+# ----------------
+# Build (release)
+# ----------------
+[tool.tox.env.build]
+description = "Build sdist/wheel and validate metadata"
+package = "skip"
+deps = [
+  "build",
+  "twine",
+]
+commands = [
+  ["python", "-m", "build", "--sdist", "--wheel", "--outdir", "dist/"],
+  ["python", "-m", "twine", "check", "dist/*"],
 ]
 
 #################### END TOX ####################
