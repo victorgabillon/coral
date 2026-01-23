@@ -25,7 +25,8 @@ from coral.neural_networks.output_converters.model_output_type import (
     ModelOutputType,
 )
 
-NNNetEvalLiteralString: Literal["neural_network"] = "neural_network"
+NN_NET_EVAL_STRING: str = "neural_network"
+NNNetEvalLiteralString: Literal["neural_network"] = NN_NET_EVAL_STRING
 
 
 @dataclass

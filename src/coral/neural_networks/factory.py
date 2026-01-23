@@ -9,6 +9,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 import dacite
+from valanga import HasTurn
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
@@ -203,10 +204,10 @@ def create_nn_from_folder_path_and_existing_model(
     )
 
 
-def create_nn_content_eval_from_folder_path_and_existing_model(
+def create_nn_content_eval_from_folder_path_and_existing_model[StateT: HasTurn](
     path_to_nn_folder: path,
-    content_to_input_convert: ContentToInputFunction,
-) -> tuple[NNBWStateEvaluator, NeuralNetArchitectureArgs]:
+    content_to_input_convert: ContentToInputFunction[StateT],
+) -> tuple[NNBWStateEvaluator[StateT], NeuralNetArchitectureArgs]:
     """
     Create a neural network content evaluator.
 
@@ -230,11 +231,11 @@ def create_nn_content_eval_from_folder_path_and_existing_model(
     return nn_state_evaluator, nn_architecture_args
 
 
-def create_nn_state_eval_from_nn_and_architecture_args(
+def create_nn_state_eval_from_nn_and_architecture_args[StateT: HasTurn](
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction,
+    content_to_input_convert: ContentToInputFunction[StateT],
     nn: ChiNN,
-) -> NNBWStateEvaluator:
+) -> NNBWStateEvaluator[StateT]:
     output_and_value_converter: OutputValueConverter = create_output_converter(
         model_output_type=nn_architecture_args.model_output_type
     )
@@ -246,10 +247,10 @@ def create_nn_state_eval_from_nn_and_architecture_args(
     )
 
 
-def create_nn_state_eval_from_architecture_args(
+def create_nn_state_eval_from_architecture_args[StateT: HasTurn](
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction,
-) -> NNBWStateEvaluator:
+    content_to_input_convert: ContentToInputFunction[StateT],
+) -> NNBWStateEvaluator[StateT]:
     nn = create_nn(nn_type_args=nn_architecture_args.model_type_args)
     nn.init_weights()
 
@@ -260,11 +261,11 @@ def create_nn_state_eval_from_architecture_args(
     )
 
 
-def create_nn_state_eval_from_nn_parameters_file_and_existing_model(
+def create_nn_state_eval_from_nn_parameters_file_and_existing_model[StateT: HasTurn](
     model_weights_file_name: path,
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction,
-) -> NNBWStateEvaluator:
+    content_to_input_convert: ContentToInputFunction[StateT],
+) -> NNBWStateEvaluator[StateT]:
     net: ChiNN
     net, nn_architecture_args = create_nn_from_param_path_and_architecture_args(
         model_weights_file_name=model_weights_file_name,

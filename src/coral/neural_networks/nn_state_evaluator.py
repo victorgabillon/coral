@@ -5,7 +5,7 @@ Module for the Neural Network Board Evaluator
 import torch
 from valanga import (
     Color,
-    FloatyBoardEvaluation,
+    FloatyStateEvaluation,
     HasTurn,
 )
 
@@ -18,25 +18,25 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
-class NNBWStateEvaluator:
+class NNBWStateEvaluator[StateT: HasTurn]:
     """
     The Generic Neural network class for board evaluation
 
     Attributes:
         net (ChiNN): The neural network model
         output_and_value_converter (OutputValueConverter): The converter for output values
-        content_to_input_converter (BoardToInputFunction): The converter for board to input tensor
+        content_to_input_converter (ContentToInputFunction): The converter for board to input tensor
     """
 
     net: ChiNN
     output_and_value_converter: OutputValueConverter
-    content_to_input_convert: ContentToInputFunction
+    content_to_input_convert: ContentToInputFunction[StateT]
 
     def __init__(
         self,
         net: ChiNN,
         output_and_value_converter: OutputValueConverter,
-        content_to_input_convert: ContentToInputFunction,
+        content_to_input_convert: ContentToInputFunction[StateT],
     ) -> None:
         """
         Initialize the NNBoardEvaluator
@@ -51,7 +51,7 @@ class NNBWStateEvaluator:
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, bw_content: HasTurn) -> float:
+    def value_white(self, bw_content: StateT) -> float:
         """
         Evaluate the value for the white player
 
@@ -68,7 +68,7 @@ class NNBWStateEvaluator:
         torch.no_grad()
         output_layer: torch.Tensor = self.my_scripted_model(input_layer)
         torch.no_grad()
-        content_evaluation: FloatyBoardEvaluation = (
+        content_evaluation: FloatyStateEvaluation = (
             self.output_and_value_converter.to_content_evaluation(
                 output_nn=output_layer, color_to_play=bw_content.turn
             )
@@ -79,7 +79,7 @@ class NNBWStateEvaluator:
 
     def evaluate(
         self, input_layer: torch.Tensor, color_to_play: Color
-    ) -> FloatyBoardEvaluation:
+    ) -> FloatyStateEvaluation:
         """
         Evaluate the board position
 
