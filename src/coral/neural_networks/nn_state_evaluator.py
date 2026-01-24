@@ -51,7 +51,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, bw_content: StateT) -> float:
+    def value_white(self, state: StateT) -> float:
         """
         Evaluate the value for the white player
 
@@ -61,13 +61,13 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         Returns:
             float: The value for the white player
         """
-        input_layer: torch.Tensor = self.content_to_input_convert(state=bw_content)
+        input_layer: torch.Tensor = self.content_to_input_convert(state=state)
         with torch.no_grad():
             output_layer = self.model(input_layer)
 
         content_evaluation: FloatyStateEvaluation = (
             self.output_and_value_converter.to_content_evaluation(
-                output_nn=output_layer, state=bw_content
+                output_nn=output_layer, state=state
             )
         )
         value_white: float | None = content_evaluation.value_white
