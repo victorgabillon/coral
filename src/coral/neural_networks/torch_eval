@@ -1,0 +1,47 @@
+# coral/batch/torch_eval_item_batch.py
+from typing import Sequence
+import torch
+from valanga.evaluations import EvalItem
+from valanga import FloatyStateEvaluation
+
+from coral.neural_networks.nn_content_evaluator import NNContentEvaluator
+
+class TorchEvalItemBatchEvaluator:
+    def __init__(self,
+                  nn_state_evaluator: NNContentEvaluator,
+                    device: str = "cpu", script: bool = True) -> None:
+        self.device = device
+        self.nn_state_evaluator = nn_state_evaluator
+
+        model = self.nn_state_evaluator.net
+        self.model = torch.jit.script(model) if script else model
+        self.model.eval()
+
+    def value_white_batch(self, items: Sequence[EvalItem]) -> list[float]:
+        xs: list[torch.Tensor] = []
+
+        for it in items:
+            raw = (
+                it.state_representation.get_evaluator_input(state=it.state)
+                if it.state_representation is not None
+                else self.nn_state_evaluator.content_to_input_convert(it.state)
+            )
+            xs.append(torch.as_tensor(raw).to(self.device))
+
+        x_batch = torch.stack(xs, dim=0)
+
+        with torch.no_grad():
+            output_layer = self.model(x_batch)
+
+        converter = self.nn_state_evaluator.output_and_value_converter
+        values: list[float] = []
+        for i, it in enumerate(items):
+            ev: FloatyStateEvaluation = converter.to_content_evaluation(
+                output_nn=output_layer[i],
+                state=it.state,
+            )
+            v = ev.value_white
+            assert v is not None
+            values.append(v)
+
+        return values

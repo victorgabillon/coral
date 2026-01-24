@@ -26,11 +26,11 @@ from coral.neural_networks.models.transformer_one import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
+from coral.neural_networks.nn_model_type_args import (
+    NNModelTypeArgs,
+)
 from coral.neural_networks.nn_state_evaluator import (
     NNBWStateEvaluator,
-)
-from coral.neural_networks.NNModelTypeArgs import (
-    NNModelTypeArgs,
 )
 from coral.neural_networks.output_converters.factory import (
     create_output_converter,
@@ -39,7 +39,7 @@ from coral.utils.small_tools import path, yaml_fetch_args_in_file
 
 if TYPE_CHECKING:
     from coral.neural_networks.output_converters.output_value_converter import (
-        OutputValueConverter,
+        TurnOutputValueConverter,
     )
 
 
@@ -236,7 +236,15 @@ def create_nn_state_eval_from_nn_and_architecture_args[StateT: HasTurn](
     content_to_input_convert: ContentToInputFunction[StateT],
     nn: ChiNN,
 ) -> NNBWStateEvaluator[StateT]:
-    output_and_value_converter: OutputValueConverter = create_output_converter(
+    """Create a neural network state evaluator from architecture arguments.
+    Args:
+        nn_architecture_args (NeuralNetArchitectureArgs): The architecture arguments.
+        content_to_input_convert (ContentToInputFunction): The content to input converter.
+        nn (ChiNN): The neural network.
+    Returns:
+        NNBWStateEvaluator: The created neural network state evaluator.
+    """
+    output_and_value_converter: TurnOutputValueConverter = create_output_converter(
         model_output_type=nn_architecture_args.model_output_type
     )
 
@@ -251,6 +259,13 @@ def create_nn_state_eval_from_architecture_args[StateT: HasTurn](
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction[StateT],
 ) -> NNBWStateEvaluator[StateT]:
+    """Create a neural network state evaluator from architecture arguments.
+    Args:
+        nn_architecture_args (NeuralNetArchitectureArgs): The architecture arguments.
+        content_to_input_convert (ContentToInputFunction): The content to input converter.
+    Returns:
+        NNBWStateEvaluator: The created neural network state evaluator.
+    """
     nn = create_nn(nn_type_args=nn_architecture_args.model_type_args)
     nn.init_weights()
 
@@ -266,6 +281,14 @@ def create_nn_state_eval_from_nn_parameters_file_and_existing_model[StateT: HasT
     nn_architecture_args: NeuralNetArchitectureArgs,
     content_to_input_convert: ContentToInputFunction[StateT],
 ) -> NNBWStateEvaluator[StateT]:
+    """Create a neural network state evaluator from a parameters file and architecture arguments.
+    Args:
+        model_weights_file_name (path): The path to the model weights file.
+        nn_architecture_args (NeuralNetArchitectureArgs): The architecture arguments.
+        content_to_input_convert (ContentToInputFunction): The content to input converter.
+    Returns:
+        NNBWStateEvaluator: The created neural network state evaluator.
+    """
     net: ChiNN
     net, nn_architecture_args = create_nn_from_param_path_and_architecture_args(
         model_weights_file_name=model_weights_file_name,

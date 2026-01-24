@@ -6,7 +6,7 @@ import sys
 import traceback
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from coral.utils.logger import coral_logger
 from coral.utils.small_tools import path, resolve_package_path
@@ -37,7 +37,7 @@ class ChiNN(nn.Module):
         """
         Initialize the weights of the model.
         """
-        pass
+        raise NotImplementedError("not implemented in base class")
 
     def load_weights_from_file(self, path_to_param_file: path) -> None:
         """
@@ -53,13 +53,13 @@ class ChiNN(nn.Module):
         coral_logger.info("load_or_init_weights from %s", path_to_param_file)
         try:  # load
             resolved_path = resolve_package_path(str(path_to_param_file))
-            with open(resolved_path, "rb") as fileNNR:
+            with open(resolved_path, "rb") as file_nnr:
                 coral_logger.info("loading the existing param file %s", resolved_path)
                 if torch.cuda.is_available():
-                    self.load_state_dict(torch.load(fileNNR))
+                    self.load_state_dict(torch.load(file_nnr))
                 else:
                     self.load_state_dict(
-                        torch.load(fileNNR, map_location=torch.device("cpu"))
+                        torch.load(file_nnr, map_location=torch.device("cpu"))
                     )
 
         except EnvironmentError:  # init

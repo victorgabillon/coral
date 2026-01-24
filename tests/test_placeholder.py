@@ -29,7 +29,7 @@ def test_point_of_view_enum():
 def test_neural_networks_module_imports():
     """Verify neural network modules can be imported."""
     from coral.neural_networks import factory
-    from coral.neural_networks.NNModelType import NNModelType
+    from coral.neural_networks.nn_model_type import NNModelType
 
     assert factory is not None
     assert NNModelType is not None
