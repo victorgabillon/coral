@@ -2,14 +2,13 @@
 Module for the Neural Network Board Evaluator
 """
 
-from typing import Protocol
+from abc import abstractmethod
+from asyncio import Protocol
 
 import torch
 from valanga import (
     FloatyStateEvaluation,
     HasTurn,
-    State,
-    TurnState,
 )
 
 from coral.chi_nn import ChiNN
@@ -22,39 +21,40 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
-class NNContentEvaluator(Protocol):
+class NNStateEvaluator[StateT](Protocol):
     """
     Protocol for Neural Network Content Evaluator
     """
 
     net: ChiNN
     output_and_value_converter: OutputValueConverter
-    content_to_input_convert: ContentToInputFunction
+    content_to_input_convert: ContentToInputFunction[StateT]
 
-    def value_white(self, bw_content: State) -> float:
+    @abstractmethod
+    def value_white(self, state: StateT) -> float:  # pylint: disable=unused-argument
         """Return the white player value for a given state."""
         ...
 
 
-class NNBWContentEvaluator:
+class NNBWStateEvaluator[StateT: HasTurn]:
     """
     The Generic Neural network class for board evaluation
 
     Attributes:
         net (ChiNN): The neural network model
         output_and_value_converter (OutputValueConverter): The converter for output values
-        content_to_input_converter (BoardToInputFunction): The converter for board to input tensor
+        content_to_input_converter (ContentToInputFunction): The converter for board to input tensor
     """
 
     net: ChiNN
     output_and_value_converter: TurnOutputValueConverter
-    content_to_input_convert: ContentToInputFunction
+    content_to_input_convert: ContentToInputFunction[StateT]
 
     def __init__(
         self,
         net: ChiNN,
         output_and_value_converter: TurnOutputValueConverter,
-        content_to_input_convert: ContentToInputFunction,
+        content_to_input_convert: ContentToInputFunction[StateT],
         script: bool = True,
     ) -> None:
         """
@@ -70,7 +70,7 @@ class NNBWContentEvaluator:
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, state: TurnState) -> float:
+    def value_white(self, state: StateT) -> float:
         """
         Evaluate the value for the white player
 
@@ -101,7 +101,7 @@ class NNBWContentEvaluator:
 
         Args:
             input_layer (torch.Tensor): The input tensor representing the board position
-            color_to_play (chess.Color): The color to play
+            state (HasTurn): The state with turn information
 
         Returns:
             FloatyBoardEvaluation: The evaluation of the board position
