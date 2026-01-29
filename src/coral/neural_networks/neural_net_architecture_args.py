@@ -31,5 +31,6 @@ class NeuralNetArchitectureArgs:
             str: A formatted string suitable for use as a filename, composed of the model type filename,
                  input representation type, and output type, without a file extension.
         """
-
-        raise NotImplementedError("Should be implemented in subclasses.")
+        model_type_filename = self.model_type_args.filename()
+        output_type = self.model_output_type.point_of_view.value
+        return f"param_{model_type_filename}_{output_type}"
