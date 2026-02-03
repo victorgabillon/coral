@@ -19,7 +19,7 @@ authors = [
 
 dependencies = [
 "torch",
-    "valanga",
+    "valanga>=0.1.8",
     "PyYAML",
     "dacite",
     "rich",
@@ -82,7 +82,8 @@ dev = [
 ]
 
 
-
+[tool.setuptools.package-data]
+coral = ["py.typed"]
 
 
 [tool.pytest.ini_options]
@@ -220,7 +221,7 @@ deps = [
   # IMPORTANT: replace local file path with a normal dependency for CI.
   # If valanga is published, use "valanga>=0.1.2".
   # If not, install from VCS or let CI install it separately.
-  "valanga",
+  "valanga>=0.1.8",
 
   # tools
   "ruff>=0.14.1",
@@ -246,7 +247,7 @@ deps = [
   "dacite",
   "rich",
   "chess",
-  "valanga",
+  "valanga>=0.1.8",
 
   # tools
   "mypy>=1.18.2",
