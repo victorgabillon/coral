@@ -14,7 +14,7 @@ class ChiNN(nn.Module):
     """The Generic Neural network class of chipiron."""
 
     def __init__(self) -> None:
-        """Initializes an instance of the ChiNN class."""
+        """Initialize an instance of the ChiNN class."""
         super().__init__()
 
     def __getstate__(self) -> dict[str, object]:
@@ -31,14 +31,10 @@ class ChiNN(nn.Module):
         raise NotImplementedError("not implemented in base class")
 
     def load_weights_from_file(self, path_to_param_file: MyPath) -> None:
-        """Loads the neural network weights from a file or initializes them if the file doesn't exist.
+        """Load the neural network weights from a file.
 
         Args:
-            path_to_param_file (str): The path to the parameter file.
-            authorisation_to_create_file (bool): Flag indicating whether the program has authorization to create a new file.
-
-        Returns:
-            None
+            path_to_param_file (MyPath): The path to the parameter file.
 
         """
         coral_logger.info("load_or_init_weights from %s", path_to_param_file)
@@ -64,7 +60,7 @@ class ChiNN(nn.Module):
             )
 
     def log_readable_model_weights_to_file(self, file_path: str) -> None:
-        """Logs the model weights to a file in a human-readable format.
+        """Log the model weights to a file in a human-readable format.
 
         Args:
             file_path (str): The path to the file where the weights will be logged.

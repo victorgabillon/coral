@@ -25,7 +25,7 @@ class NeuralNetArchitectureArgs:
     model_output_type: ModelOutputType
 
     def filename(self) -> str:
-        """Generates a filename string based on the model type arguments, input representation type, and output type.
+        """Generate a filename string based on the model type arguments and output type.
 
         Returns:
             str: A formatted string suitable for use as a filename, composed of the model type filename,

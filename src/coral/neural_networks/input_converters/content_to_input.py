@@ -13,10 +13,10 @@ class ContentToInputFunction[StateT_contra](Protocol):
     """Protocol for a callable object that converts a chess board to a tensor input for a neural network."""
 
     def __call__(self, state: StateT_contra) -> Any:
-        """Converts the given chess board to a tensor input.
+        """Convert the given chess board to a tensor input.
 
         Args:
-            state (State): The state with turn information to convert.
+            state (StateT_contra): The state with turn information to convert.
 
         Returns:
             torch.Tensor: The tensor input representing the chess board.
@@ -29,10 +29,10 @@ class ContentToInput[StateT_contra](Protocol):
     """Protocol for converting a chess board to a tensor input for a neural network."""
 
     def convert(self, content_with_turn: StateT_contra) -> torch.Tensor:
-        """Converts the given chess board to a tensor input.
+        """Convert the given chess board to a tensor input.
 
         Args:
-            state (State): The state with turn information to convert.
+            content_with_turn (StateT_contra): The state with turn information to convert.
 
         Returns:
             torch.Tensor: The tensor input representing the chess board.

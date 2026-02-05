@@ -39,7 +39,7 @@ class TransformerArgs:
     dropout_ratio: float = 0.0
 
     def __str__(self) -> str:
-        """Returns a string representation of the TransformerArgs instance."""
+        """Return a string representation of the TransformerArgs instance."""
         return (
             f"TransformerArgs(n_embd={self.n_embd}, "
             f"n_head={self.n_head}, "
@@ -48,7 +48,7 @@ class TransformerArgs:
         )
 
     def filename(self) -> str:
-        """Generates a filename based on the TransformerArgs instance."""
+        """Generate a filename based on the TransformerArgs instance."""
         return (
             f"transformer_{self.n_embd}embd_"
             f"{self.n_head}head_{self.n_layer}layer_"
@@ -70,7 +70,7 @@ class Head(nn.Module):
         # TODO(victor): investigate gap.
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Applies self-attention to the input tensor.
+        """Apply self-attention to the input tensor.
 
         Args:
             x (torch.Tensor): Input tensor of shape (batch, time-step, channels).

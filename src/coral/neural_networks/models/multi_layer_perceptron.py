@@ -1,4 +1,4 @@
-"""This module defines the neural network model NetPP2D2_2_PRELU.
+"""Define the neural network model NetPP2D2_2_PRELU.
 
 The NetPP2D2_2_PRELU class is a subclass of ChiNN and implements the forward pass of the neural network.
 It consists of two fully connected layers with PReLU activation functions.
@@ -47,7 +47,7 @@ class MultiLayerPerceptronArgs:
         return f"Type: {self.type}, Neurons: [{neurons}], Activations: [{activations}]"
 
     def filename(self) -> str:
-        """Generates a filename for the model based on its architecture.
+        """Generate a filename for the model based on its architecture.
 
         Returns:
             str: A filename-safe string representing the model architecture.
@@ -82,7 +82,7 @@ def build_sequential(
 
 
 def extract_sequential_model_data(model: nn.Sequential) -> dict[str, Any]:
-    """Extracts the weights and biases from a Sequential model in a layered dictionary format.
+    """Extract the weights and biases from a Sequential model in a layered dictionary format.
 
     Args:
         model (nn.Sequential): The Sequential model to extract from.
@@ -120,7 +120,7 @@ class MultiLayerPerceptron(ChiNN):
     """
 
     def __init__(self, args: MultiLayerPerceptronArgs) -> None:
-        """Constructor for the NetPP2D2_2_PRELU class. Initializes the neural network layers."""
+        """Construct the NetPP2D2_2_PRELU class and initialize the layers."""
         super().__init__()
 
         self.model: Callable[[torch.Tensor], torch.Tensor] = build_sequential(
@@ -149,7 +149,7 @@ class MultiLayerPerceptron(ChiNN):
         return
 
     def log_readable_model_weights_to_file(self, file_path: str) -> None:
-        """Writes the model weights and biases into a YAML file.
+        """Write the model weights and biases into a YAML file.
 
         Args:
             file_path (str): The path where the YAML file will be saved.
@@ -164,12 +164,7 @@ class MultiLayerPerceptron(ChiNN):
         coral_logger.info("Model weights successfully written to %s", file_path)
 
     def print_param(self) -> None:
-        """Prints the model weights and biases to the console in YAML format.
-
-        Args:
-            model (nn.Sequential): The Sequential model.
-
-        """
+        """Print the model weights and biases to the console in YAML format."""
         assert isinstance(self.model, nn.Sequential)
         layers_data = extract_sequential_model_data(self.model)
         yaml_str = yaml.dump(layers_data, default_flow_style=False, sort_keys=False)

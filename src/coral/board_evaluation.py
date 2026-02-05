@@ -1,5 +1,6 @@
-"""_
-Module for the BoardEvaluation class and the PointOfView enumeration.
+"""Define the BoardEvaluation class and the PointOfView enumeration.
+
+Use these definitions to describe the perspective used for board evaluation.
 """
 
 from enum import StrEnum

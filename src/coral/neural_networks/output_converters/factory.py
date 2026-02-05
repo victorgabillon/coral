@@ -12,11 +12,14 @@ from coral.neural_networks.output_converters.output_value_converter import (
 
 
 class OutputConverterError(ValueError):
-    pass
+    """Base error for output converter failures."""
 
 
 class InvalidOutputConverterError(OutputConverterError):
+    """Raise when an output converter is invalid."""
+
     def __init__(self, other: object, module_name: str) -> None:
+        """Initialize the error with context about the invalid converter."""
         super().__init__(f"Not a valid output converter: {other} in file{module_name}")
 
 

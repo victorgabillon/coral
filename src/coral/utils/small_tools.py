@@ -1,4 +1,4 @@
-"""This module contains utility functions and classes for small tools."""
+"""Provide utility functions and classes for small tools."""
 
 import os
 import typing
@@ -11,7 +11,10 @@ MyPath = typing.Annotated[str | os.PathLike[str], "path"]
 
 
 class ResourceNotFoundError(FileNotFoundError):
+    """Raise when a package resource cannot be found."""
+
     def __init__(self, relative_path: str, package: str) -> None:
+        """Initialize the error with missing resource details."""
         super().__init__(f"Resource not found: {relative_path} in package {package!r}")
 
 

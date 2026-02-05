@@ -56,9 +56,10 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         """Initialize the NNBoardEvaluator.
 
         Args:
-            net (ChiNN): The neural network model
-            output_and_value_converter (OutputValueConverter): The converter for output values
-            content_to_input_converter (BoardToInputFunction): The converter for board to input tensor
+            net (ChiNN): The neural network model.
+            output_and_value_converter (OutputValueConverter): The converter for output values.
+            content_to_input_convert (ContentToInputFunction): The converter for board to input tensor.
+            script (bool): Whether to torchscript the model.
 
         """
         self.net = net
@@ -71,10 +72,10 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         """Evaluate the value for the white player.
 
         Args:
-            board (BoardChi): The chess board
+            state (StateT): The state to evaluate.
 
         Returns:
-            float: The value for the white player
+            float: The value for the white player.
 
         """
         input_layer: torch.Tensor = self.content_to_input_convert(state=state)

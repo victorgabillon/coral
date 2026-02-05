@@ -42,7 +42,10 @@ if TYPE_CHECKING:
 
 
 class ArchitectureFileNotFoundError(FileNotFoundError):
+    """Raise when the architecture file is missing."""
+
     def __init__(self, filename: str) -> None:
+        """Initialize the error with the missing filename."""
         super().__init__(f"this is not a file {filename}")
 
 
@@ -85,6 +88,7 @@ def get_nn_param_file_path_from(
 
     Args:
         folder_path (str): The folder path for the neural network parameters.
+        file_name (str | None): Optional base filename for the parameter files.
 
     Returns:
         str: The file path for the neural network parameters.
@@ -221,6 +225,7 @@ def create_nn_content_eval_from_folder_path_and_existing_model[StateT: HasTurn](
 
     Args:
         path_to_nn_folder (path): the path to the folder where the model is defined.
+        content_to_input_convert (ContentToInputFunction): Converter from content to NN input.
 
     Returns:
         NNContentEvaluator: The created neural network content evaluator.
