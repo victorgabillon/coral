@@ -1,6 +1,4 @@
-"""
-Module that contains the NeuralNetBoardEvalArgs class.
-"""
+"""Module that contains the NeuralNetBoardEvalArgs class."""
 
 from dataclasses import dataclass, field
 from typing import Literal
@@ -29,10 +27,23 @@ NN_NET_EVAL_LITERAL_STRING: Literal["neural_network"] = "neural_network"
 NN_NET_EVAL_STRING: str = NN_NET_EVAL_LITERAL_STRING
 
 
+class NeuralNetBoardEvalArgsError(ValueError):
+    """Invalid neural net board eval args."""
+
+
+class UnexpectedBoardEvalTypeError(NeuralNetBoardEvalArgsError):
+    def __init__(self) -> None:
+        super().__init__("Expecting neural_network as name")
+
+
+class MissingPathToNnFolderError(NeuralNetBoardEvalArgsError):
+    def __init__(self, module_name: str) -> None:
+        super().__init__(f"Expecting a path_to_nn_folder in {module_name}")
+
+
 @dataclass
 class NeuralNetBoardEvalArgs:
-    """
-    NeuralNetBoardEvalArgs encapsulates the configuration arguments required for evaluating board positions
+    """NeuralNetBoardEvalArgs encapsulates the configuration arguments required for evaluating board positions
     using a neural network-based node evaluator.
 
     Attributes:
@@ -41,6 +52,7 @@ class NeuralNetBoardEvalArgs:
             Defaults to a MultiLayerPerceptron with predefined layer sizes and activation functions.
         type (Literal[NodeEvaluatorTypes.NeuralNetwork]):
             The type of node evaluator, which must be set to 'NeuralNetwork'.
+
     """
 
     type: Literal["neural_network"] = NN_NET_EVAL_LITERAL_STRING
@@ -63,16 +75,16 @@ class NeuralNetBoardEvalArgs:
     )
 
     def __post_init__(self) -> None:
-        """
-        Performs additional initialization after the object is created.
+        """Performs additional initialization after the object is created.
 
         Raises:
             ValueError: If the type is not NodeEvaluatorTypes.NeuralNetwork.
+
         """
         if self.type != NN_NET_EVAL_LITERAL_STRING:
-            raise ValueError("Expecting neural_network as name")
+            raise UnexpectedBoardEvalTypeError
         if (
             self.neural_nets_model_and_architecture.model_weights_file_name
             == "*default*"
         ):
-            raise ValueError(f"Expecting a path_to_nn_folder in {__name__}")
+            raise MissingPathToNnFolderError(__name__)

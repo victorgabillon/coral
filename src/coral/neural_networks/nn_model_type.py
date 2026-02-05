@@ -1,19 +1,19 @@
 """Defines the neural network model and activation function types."""
 
-from enum import Enum
-from typing import Callable
+from collections.abc import Callable
+from enum import StrEnum
 
 from torch import nn
 
 
-class NNModelType(str, Enum):
+class NNModelType(StrEnum):
     """Defines the types of neural network models."""
 
     MULTI_LAYER_PERCEPTRON = "multi_layer_perceptron"
     TRANSFORMER = "transformer"
 
 
-class ActivationFunctionType(str, Enum):
+class ActivationFunctionType(StrEnum):
     """Defines the types of activation functions."""
 
     TANGENT_HYPERBOLIC = "hyperbolic_tangent"

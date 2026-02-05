@@ -1,5 +1,4 @@
-"""
-This module defines the neural network model NetPP2D2_2_PRELU.
+"""This module defines the neural network model NetPP2D2_2_PRELU.
 
 The NetPP2D2_2_PRELU class is a subclass of ChiNN and implements the forward pass of the neural network.
 It consists of two fully connected layers with PReLU activation functions.
@@ -15,7 +14,7 @@ Methods:
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import torch
 import yaml
@@ -28,6 +27,9 @@ from coral.neural_networks.nn_model_type import (
     activation_map,
 )
 from coral.utils.logger import coral_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -49,6 +51,7 @@ class MultiLayerPerceptronArgs:
 
         Returns:
             str: A filename-safe string representing the model architecture.
+
         """
         # Create a filename-safe version by replacing spaces with underscores and ensuring everything is lowercase
         neurons = "_".join(map(str, self.number_neurons_per_layer))
@@ -67,6 +70,7 @@ def build_sequential(
 
     Returns:
         nn.Sequential: A sequential neural network model.
+
     """
     modules: list[nn.Module] = []
     for i in range(len(layers) - 1):
@@ -78,14 +82,14 @@ def build_sequential(
 
 
 def extract_sequential_model_data(model: nn.Sequential) -> dict[str, Any]:
-    """
-    Extracts the weights and biases from a Sequential model in a layered dictionary format.
+    """Extracts the weights and biases from a Sequential model in a layered dictionary format.
 
     Args:
         model (nn.Sequential): The Sequential model to extract from.
 
     Returns:
         dict[str, Any]: A dictionary with layer names as keys and parameter data as values.
+
     """
     layers_data: dict[str, Any] = {}
 
@@ -105,14 +109,14 @@ def extract_sequential_model_data(model: nn.Sequential) -> dict[str, Any]:
 
 
 class MultiLayerPerceptron(ChiNN):
-    """
-    Neural network model for board evaluation using 2D2_2_PRELU architecture.
+    """Neural network model for board evaluation using 2D2_2_PRELU architecture.
 
     Attributes:
         fc1 (nn.Linear): The first fully connected layer.
         relu_1 (nn.PReLU): The first PReLU activation function.
         fc2 (nn.Linear): The second fully connected layer.
         tanh (nn.Tanh): The tanh activation function.
+
     """
 
     def __init__(self, args: MultiLayerPerceptronArgs) -> None:
@@ -129,28 +133,27 @@ class MultiLayerPerceptron(ChiNN):
         return self.__dict__.copy()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass of the neural network.
+        """Forward pass of the neural network.
 
         Args:
             x (torch.Tensor): The input tensor.
 
         Returns:
             torch.Tensor: The output tensor.
+
         """
-        y = self.model(x)
-        return y
+        return self.model(x)
 
     def init_weights(self) -> None:
         """Initialize the weights of the neural network."""
         return
 
     def log_readable_model_weights_to_file(self, file_path: str) -> None:
-        """
-        Writes the model weights and biases into a YAML file.
+        """Writes the model weights and biases into a YAML file.
 
         Args:
             file_path (str): The path where the YAML file will be saved.
+
         """
         assert isinstance(self.model, nn.Sequential)
         layers_data = extract_sequential_model_data(self.model)
@@ -161,11 +164,11 @@ class MultiLayerPerceptron(ChiNN):
         coral_logger.info("Model weights successfully written to %s", file_path)
 
     def print_param(self) -> None:
-        """
-        Prints the model weights and biases to the console in YAML format.
+        """Prints the model weights and biases to the console in YAML format.
 
         Args:
             model (nn.Sequential): The Sequential model.
+
         """
         assert isinstance(self.model, nn.Sequential)
         layers_data = extract_sequential_model_data(self.model)

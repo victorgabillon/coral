@@ -1,6 +1,4 @@
-"""
-Module for converting the output of the neural network to a board evaluation
-"""
+"""Module for converting the output of the neural network to a board evaluation."""
 
 from abc import ABC, abstractmethod
 
@@ -9,17 +7,15 @@ from valanga import Color, FloatyStateEvaluation, HasTurn, State
 
 
 class OutputValueConverter(ABC):
-    """
-    Converting an output of the neural network to a board evaluation
-    and conversely converting a board evaluation to an output of the neural network
+    """Converting an output of the neural network to a board evaluation
+    and conversely converting a board evaluation to an output of the neural network.
     """
 
     @abstractmethod
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: State
     ) -> FloatyStateEvaluation:
-        """
-        Convert the output of the neural network to a content evaluation.
+        """Convert the output of the neural network to a content evaluation.
 
         Args:
             output_nn (torch.Tensor): The output of the neural network.
@@ -27,6 +23,7 @@ class OutputValueConverter(ABC):
 
         Returns:
             FloatyBoardEvaluation: The converted board evaluation.
+
         """
         ...
 
@@ -34,25 +31,22 @@ class OutputValueConverter(ABC):
     def from_value_white_to_model_output(
         self, content_value_white: float, content_with_turn: State
     ) -> torch.Tensor:
-        """
-        This functions takes the value white and converts to the corresponding value from the NN model output.
+        """This functions takes the value white and converts to the corresponding value from the NN model output.
         Remember some NN models output value_from_mover for instance
         This function is used in training where the value white is compared to target value from datasets that are float.
         """
 
 
 class TurnOutputValueConverter(ABC):
-    """
-    Converting an output of the neural network to a board evaluation
-    and conversely converting a board evaluation to an output of the neural network
+    """Converting an output of the neural network to a board evaluation
+    and conversely converting a board evaluation to an output of the neural network.
     """
 
     @abstractmethod
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
     ) -> FloatyStateEvaluation:
-        """
-        Convert the output of the neural network to a content evaluation.
+        """Convert the output of the neural network to a content evaluation.
 
         Args:
             output_nn (torch.Tensor): The output of the neural network.
@@ -60,6 +54,7 @@ class TurnOutputValueConverter(ABC):
 
         Returns:
             FloatyBoardEvaluation: The converted board evaluation.
+
         """
         ...
 
@@ -67,29 +62,25 @@ class TurnOutputValueConverter(ABC):
     def from_value_white_to_model_output(
         self, content_value_white: float, content_with_turn: HasTurn
     ) -> torch.Tensor:
-        """
-        This functions takes the value white and converts to the corresponding value from the NN model output.
+        """This functions takes the value white and converts to the corresponding value from the NN model output.
         Remember some NN models output value_from_mover for instance
         This function is used in training where the value white is compared to target value from datasets that are float.
         """
 
 
-# TODO This part should be reformated/improved as two concept are mixed
+# TODO(victor): This part should be reformated/improved as two concept are mixed See  issue #24 for more details
 #  the convertion from the model output to  value white and the conversion to the final object used in pytorch as FloatyBoardEvaluation
 #  maybe just rewrite a bit to make it less confusing
-#  and the naming is not great as now we have multi option
+#  and the naming is not great as now we have multi option.
 
 
 class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
-    """
-    Converting from a NN that outputs a 1D value from the point of view of the player to move
-    """
+    """Converting from a NN that outputs a 1D value from the point of view of the player to move."""
 
     def convert_value_from_mover_viewpoint_to_value_white(
         self, turn: Color, value_from_mover_view_point: float
     ) -> float:
-        """
-        Convert the value from the mover's viewpoint to the value from the white player's viewpoint.
+        """Convert the value from the mover's viewpoint to the value from the white player's viewpoint.
 
         Args:
             turn (Color): The color of the player to move.
@@ -97,6 +88,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
 
         Returns:
             float: The value from the white player's viewpoint.
+
         """
         if turn == Color.BLACK:
             value_white = -value_from_mover_view_point
@@ -107,8 +99,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
     ) -> FloatyStateEvaluation:
-        """
-        Convert the output of the neural network to a content evaluation.
+        """Convert the output of the neural network to a content evaluation.
 
         Args:
             output_nn (torch.Tensor): The output of the neural network.
@@ -116,6 +107,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
 
         Returns:
             FloatyBoardEvaluation: The converted board evaluation.
+
         """
         value: float = output_nn.item()
         value_white: float = self.convert_value_from_mover_viewpoint_to_value_white(
@@ -129,8 +121,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
     def from_value_white_to_model_output(
         self, content_value_white: float, content_with_turn: HasTurn
     ) -> torch.Tensor:
-        """
-        This functions takes the value white and converts to the corresponding value from the NN model output.
+        """This functions takes the value white and converts to the corresponding value from the NN model output.
         Remember some NN models output value_from_mover for instance
         This function is used in training where the value white is compared to taget value from datasets that are float.
         """
@@ -143,15 +134,12 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
 
 
 class IdentityConverter(TurnOutputValueConverter):
-    """
-    Converting from a NN that outputs a 1D value from the point of view of the player to move
-    """
+    """Converting from a NN that outputs a 1D value from the point of view of the player to move."""
 
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
     ) -> FloatyStateEvaluation:
-        """
-        Convert the output of the neural network to a content evaluation.
+        """Convert the output of the neural network to a content evaluation.
 
         Args:
             output_nn (torch.Tensor): The output of the neural network.
@@ -159,6 +147,7 @@ class IdentityConverter(TurnOutputValueConverter):
 
         Returns:
             FloatyBoardEvaluation: The converted board evaluation.
+
         """
         value_white: float = output_nn.item()
         state_evaluation: FloatyStateEvaluation = FloatyStateEvaluation(
@@ -169,8 +158,7 @@ class IdentityConverter(TurnOutputValueConverter):
     def from_value_white_to_model_output(
         self, content_value_white: float, content_with_turn: HasTurn
     ) -> torch.Tensor:
-        """
-        This functions takes the value white and converts to the corresponding value from the NN model output.
+        """This functions takes the value white and converts to the corresponding value from the NN model output.
         Remember some NN models output value_from_mover for instance
         This function is used in training where the value white is compared to taget value from datasets that are float.
         """

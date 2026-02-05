@@ -11,6 +11,15 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
+class OutputConverterError(ValueError):
+    pass
+
+
+class InvalidOutputConverterError(OutputConverterError):
+    def __init__(self, other: object, module_name: str) -> None:
+        super().__init__(f"Not a valid output converter: {other} in file{module_name}")
+
+
 def create_output_converter(
     model_output_type: ModelOutputType,
 ) -> TurnOutputValueConverter:
@@ -23,6 +32,6 @@ def create_output_converter(
         case PointOfView.PLAYER_TO_MOVE:
             output_value_converter = PlayerToMoveValueToValueWhiteConverter()
         case other:
-            raise ValueError(f"Not a valid output converter: {other} in file{__name__}")
+            raise InvalidOutputConverterError(other, __name__)
 
     return output_value_converter

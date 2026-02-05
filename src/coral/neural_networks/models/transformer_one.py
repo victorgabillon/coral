@@ -1,12 +1,12 @@
 """Transformer-based neural network model for board evaluation."""
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import chess
 import torch
+import torch.nn.functional as functional
 from torch import nn
-from torch.nn import functional as F
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.nn_model_type import NNModelType
@@ -39,9 +39,7 @@ class TransformerArgs:
     dropout_ratio: float = 0.0
 
     def __str__(self) -> str:
-        """
-        Returns a string representation of the TransformerArgs instance.
-        """
+        """Returns a string representation of the TransformerArgs instance."""
         return (
             f"TransformerArgs(n_embd={self.n_embd}, "
             f"n_head={self.n_head}, "
@@ -50,9 +48,7 @@ class TransformerArgs:
         )
 
     def filename(self) -> str:
-        """
-        Generates a filename based on the TransformerArgs instance.
-        """
+        """Generates a filename based on the TransformerArgs instance."""
         return (
             f"transformer_{self.n_embd}embd_"
             f"{self.n_head}head_{self.n_layer}layer_"
@@ -61,9 +57,9 @@ class TransformerArgs:
 
 
 class Head(nn.Module):
-    """one head of self-attention"""
+    """one head of self-attention."""
 
-    def __init__(self, n_embd: int, head_size: int, dropout_ratio: float):
+    def __init__(self, n_embd: int, head_size: int, dropout_ratio: float) -> None:
         """Initialize attention head layers."""
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=True)
@@ -71,7 +67,7 @@ class Head(nn.Module):
         self.value = nn.Linear(n_embd, head_size, bias=True)
 
         self.dropout = nn.Dropout(dropout_ratio)
-        # todo investigate gap
+        # TODO(victor): investigate gap.
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Applies self-attention to the input tensor.
@@ -81,17 +77,18 @@ class Head(nn.Module):
 
         Returns:
             torch.Tensor: Output tensor of shape (batch, time-step, head size).
+
         """
         # input of size (batch, time-step, channels)
         # output of size (batch, time-step, head size)
-        # B, T, C = x.shape
+        # B, T, C is x.shape
         k = self.key(x)  # (B,T,hs)
         q = self.query(x)  # (B,T,hs)
         # compute attention scores ("affinities")
         wei = (
             q @ k.transpose(-2, -1) * k.shape[-1] ** -0.5
         )  # (B, T, hs) @ (B, hs, T) -> (B, T, T)
-        wei = F.softmax(wei, dim=-1)  # (B, T, T)
+        wei = functional.softmax(wei, dim=-1)  # (B, T, T)
         wei = self.dropout(wei)
         # perform the weighted aggregation of the values
         v = self.value(x)  # (B,T,hs)
@@ -100,7 +97,7 @@ class Head(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    """multiple heads of self-attention in parallel"""
+    """multiple heads of self-attention in parallel."""
 
     def __init__(
         self, num_heads: int, head_size: int, dropout_ratio: float, n_embd: int
@@ -122,12 +119,11 @@ class MultiHeadAttention(nn.Module):
         """Compute multi-head attention output for the input tensor."""
         out: torch.Tensor = torch.empty(1)  # to make mypy and jit happy
         out = torch.cat([h(x) for h in self.heads], dim=-1)
-        out = self.dropout(self.proj(out))
-        return out
+        return cast("torch.Tensor", self.dropout(self.proj(out)))
 
 
 class FeedFoward(nn.Module):
-    """a simple linear layer followed by a non-linearity"""
+    """a simple linear layer followed by a non-linearity."""
 
     def __init__(self, n_embd: int, dropout_ratio: float) -> None:
         """Initialize the feed-forward network."""
@@ -139,22 +135,14 @@ class FeedFoward(nn.Module):
             nn.Dropout(dropout_ratio),
         )
 
-    # self.lin =   nn.Linear(n_embd, 4 * n_embd)
-    # self.re1 =     nn.GELU()
-    # self.lin2 =    nn.Linear(4 * n_embd, n_embd)
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the feed-forward network to the input tensor."""
-        # xx=self.re1(self.lin(x))
-        # a=self.lin2(xx)
         a: torch.Tensor = self.net(x)
-
-        # print('x',x, a, 'yy',self.net[0].weight, 'rr', self.net[0].weight.grad)
         return a
 
 
 class Block(nn.Module):
-    """Transformer block: communication followed by computation"""
+    """Transformer block: communication followed by computation."""
 
     def __init__(self, n_embd: int, n_head: int, dropout_ratio: float) -> None:
         """Initialize a transformer block with attention and feed-forward layers."""
@@ -172,13 +160,9 @@ class Block(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run the transformer block forward pass."""
-        # print('zzyyy',x,self.ln1(x))
-
         y = self.sa(self.ln1(x))
         x = x + y
-        # print('yyy',y,x,self.ln2(x))
-        x = x + self.ffwd(self.ln2(x))
-        return x
+        return cast("torch.Tensor", x + self.ffwd(self.ln2(x)))
 
 
 class TransformerOne(ChiNN):
@@ -208,7 +192,7 @@ class TransformerOne(ChiNN):
 
     def init_weights(self) -> None:
         """Initialize model weights."""
-        # TODO fix the weird init_weights logics
+        # TODO: fix the weird init_weights logics
         return
 
     def _init_weights(self, module: Any) -> None:
@@ -224,30 +208,24 @@ class TransformerOne(ChiNN):
             indices, :
         ]  # (B,len_all_possible_tensor_input,n_embd)
         z = self.blocks(y)  # (B,T,C)
-        # w = self.ln_f(z)  # (B,T,C)
         x: torch.Tensor = self.lm_head(z.flatten(start_dim=1))  # (B,T,vocab_size)
-        # print("z",z,"oo", z.sum())
 
-        x = self.tan_h(x)
-
-        return x
+        return cast("torch.Tensor", self.tan_h(x))
 
     def get_nn_input(self, node: Any) -> None:
-        """
-        Get the input tensor for the given node.
+        """Get the input tensor for the given node.
 
         Args:
             node (Any): Current node.
 
         Returns:
             None
+
         """
         raise NotImplementedError(f"to be recoded in {__name__}")
 
     def print_param(self) -> None:
-        """
-        Print the parameters of the model.
-        """
+        """Print the parameters of the model."""
         print(
             "print param not implmeented but is it necessary given the summary thingy in pythorch?"
         )

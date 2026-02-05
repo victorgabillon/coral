@@ -1,6 +1,4 @@
-"""
-Module for the Neural Network Board Evaluator
-"""
+"""Module for the Neural Network Board Evaluator."""
 
 from abc import abstractmethod
 from asyncio import Protocol
@@ -22,9 +20,7 @@ from coral.neural_networks.output_converters.output_value_converter import (
 
 
 class NNStateEvaluator[StateT](Protocol):
-    """
-    Protocol for Neural Network Content Evaluator
-    """
+    """Protocol for Neural Network Content Evaluator."""
 
     net: ChiNN
     output_and_value_converter: OutputValueConverter
@@ -37,13 +33,13 @@ class NNStateEvaluator[StateT](Protocol):
 
 
 class NNBWStateEvaluator[StateT: HasTurn]:
-    """
-    The Generic Neural network class for board evaluation
+    """The Generic Neural network class for board evaluation.
 
     Attributes:
         net (ChiNN): The neural network model
         output_and_value_converter (OutputValueConverter): The converter for output values
         content_to_input_converter (ContentToInputFunction): The converter for board to input tensor
+
     """
 
     net: ChiNN
@@ -57,13 +53,13 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         content_to_input_convert: ContentToInputFunction[StateT],
         script: bool = True,
     ) -> None:
-        """
-        Initialize the NNBoardEvaluator
+        """Initialize the NNBoardEvaluator.
 
         Args:
             net (ChiNN): The neural network model
             output_and_value_converter (OutputValueConverter): The converter for output values
             content_to_input_converter (BoardToInputFunction): The converter for board to input tensor
+
         """
         self.net = net
         self.scripted_net = torch.jit.script(net) if script else net
@@ -72,14 +68,14 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         self.content_to_input_convert = content_to_input_convert
 
     def value_white(self, state: StateT) -> float:
-        """
-        Evaluate the value for the white player
+        """Evaluate the value for the white player.
 
         Args:
             board (BoardChi): The chess board
 
         Returns:
             float: The value for the white player
+
         """
         input_layer: torch.Tensor = self.content_to_input_convert(state=state)
         with torch.no_grad():
@@ -97,8 +93,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
     def evaluate(
         self, input_layer: torch.Tensor, state: HasTurn
     ) -> FloatyStateEvaluation:
-        """
-        Evaluate the board position
+        """Evaluate the board position.
 
         Args:
             input_layer (torch.Tensor): The input tensor representing the board position
@@ -106,6 +101,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
         Returns:
             FloatyBoardEvaluation: The evaluation of the board position
+
         """
         self.scripted_net.eval()
         with torch.no_grad():
@@ -113,8 +109,6 @@ class NNBWStateEvaluator[StateT: HasTurn]:
             output_layer = self.scripted_net(input_layer)
 
             # translate the NN output batch into a proper Board Evaluations classes in a list
-            state_evaluations = self.output_and_value_converter.to_content_evaluation(
+            return self.output_and_value_converter.to_content_evaluation(
                 output_nn=output_layer, state=state
             )
-
-        return state_evaluations

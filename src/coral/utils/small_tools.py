@@ -1,6 +1,4 @@
-"""
-This module contains utility functions and classes for small tools.
-"""
+"""This module contains utility functions and classes for small tools."""
 
 import os
 import typing
@@ -9,18 +7,23 @@ from pathlib import Path
 
 import yaml
 
-path = typing.Annotated[str | os.PathLike[str], "path"]
+MyPath = typing.Annotated[str | os.PathLike[str], "path"]
+
+
+class ResourceNotFoundError(FileNotFoundError):
+    def __init__(self, relative_path: str, package: str) -> None:
+        super().__init__(f"Resource not found: {relative_path} in package {package!r}")
 
 
 def resolve_package_path(path_to_file: str | Path) -> str:
-    """
-    Replace 'package://' at the start of the path with the chipiron package root.
+    """Replace 'package://' at the start of the path with the chipiron package root.
 
     Args:
         path_to_file (str or Path): Input path, possibly starting with 'package://'.
 
     Returns:
         str: Resolved absolute path.
+
     """
     if isinstance(path_to_file, Path):
         path_to_file = str(path_to_file)
@@ -30,17 +33,14 @@ def resolve_package_path(path_to_file: str | Path) -> str:
         resource = files("chipiron").joinpath(relative_path)
 
         if not resource.is_file() and not resource.is_dir():
-            raise FileNotFoundError(
-                f"Resource not found: {relative_path} in package 'chipiron'"
-            )
+            raise ResourceNotFoundError(relative_path, "chipiron")
 
         return str(resource)  # You can also use `.as_posix()` if you need POSIX format
     return str(path_to_file)
 
 
-def yaml_fetch_args_in_file(path_file: path) -> dict[typing.Any, typing.Any]:
-    """
-    Fetch arguments from a YAML file.
+def yaml_fetch_args_in_file(path_file: MyPath) -> dict[typing.Any, typing.Any]:
+    """Fetch arguments from a YAML file.
 
     Args:
         path_file: The path to the YAML file.
@@ -49,6 +49,6 @@ def yaml_fetch_args_in_file(path_file: path) -> dict[typing.Any, typing.Any]:
         A dictionary containing the arguments.
 
     """
-    with open(path_file, "r", encoding="utf-8") as file:
+    with open(path_file, encoding="utf-8") as file:
         args: dict[typing.Any, typing.Any] = yaml.load(file, Loader=yaml.FullLoader)
     return args
