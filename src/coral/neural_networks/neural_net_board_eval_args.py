@@ -32,19 +32,26 @@ class NeuralNetBoardEvalArgsError(ValueError):
 
 
 class UnexpectedBoardEvalTypeError(NeuralNetBoardEvalArgsError):
+    """Raise when the board eval type is unexpected."""
+
     def __init__(self) -> None:
+        """Initialize the error for an unexpected eval type."""
         super().__init__("Expecting neural_network as name")
 
 
 class MissingPathToNnFolderError(NeuralNetBoardEvalArgsError):
+    """Raise when the NN folder path is missing from configuration."""
+
     def __init__(self, module_name: str) -> None:
+        """Initialize the error with the module name."""
         super().__init__(f"Expecting a path_to_nn_folder in {module_name}")
 
 
 @dataclass
 class NeuralNetBoardEvalArgs:
-    """NeuralNetBoardEvalArgs encapsulates the configuration arguments required for evaluating board positions
-    using a neural network-based node evaluator.
+    """Encapsulate the configuration arguments required for evaluating board positions.
+
+    Use these arguments to configure a neural network-based node evaluator.
 
     Attributes:
         neural_nets_model_and_architecture (NeuralNetModelsAndArchitecture):
@@ -75,7 +82,7 @@ class NeuralNetBoardEvalArgs:
     )
 
     def __post_init__(self) -> None:
-        """Performs additional initialization after the object is created.
+        """Perform additional initialization after the object is created.
 
         Raises:
             ValueError: If the type is not NodeEvaluatorTypes.NeuralNetwork.
