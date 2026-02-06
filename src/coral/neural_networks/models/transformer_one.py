@@ -1,7 +1,7 @@
 """Transformer-based neural network model for board evaluation."""
 
 from dataclasses import dataclass
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 import chess
 import torch
@@ -119,7 +119,7 @@ class MultiHeadAttention(nn.Module):
         """Compute multi-head attention output for the input tensor."""
         out: torch.Tensor = torch.empty(1)  # to make mypy and jit happy
         out = torch.cat([h(x) for h in self.heads], dim=-1)
-        return cast("torch.Tensor", self.dropout(self.proj(out)))
+        return self.dropout(self.proj(out))
 
 
 class FeedFoward(nn.Module):
@@ -162,7 +162,7 @@ class Block(nn.Module):
         """Run the transformer block forward pass."""
         y = self.sa(self.ln1(x))
         x = x + y
-        return cast("torch.Tensor", x + self.ffwd(self.ln2(x)))
+        return x + self.ffwd(self.ln2(x))
 
 
 class TransformerOne(ChiNN):
@@ -210,7 +210,7 @@ class TransformerOne(ChiNN):
         z = self.blocks(y)  # (B,T,C)
         x: torch.Tensor = self.lm_head(z.flatten(start_dim=1))  # (B,T,vocab_size)
 
-        return cast("torch.Tensor", self.tan_h(x))
+        return self.tan_h(x)
 
     def get_nn_input(self, node: Any) -> None:
         """Get the input tensor for the given node.

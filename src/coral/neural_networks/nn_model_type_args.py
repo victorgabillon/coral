@@ -7,4 +7,4 @@ from coral.neural_networks.models.transformer_one import (
     TransformerArgs,
 )
 
-type NNModelTypeArgs = MultiLayerPerceptronArgs | TransformerArgs
+NNModelTypeArgs = MultiLayerPerceptronArgs | TransformerArgs

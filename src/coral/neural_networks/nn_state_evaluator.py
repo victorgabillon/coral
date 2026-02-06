@@ -1,7 +1,7 @@
 """Module for the Neural Network Board Evaluator."""
 
 from abc import abstractmethod
-from asyncio import Protocol
+from typing import Protocol
 
 import torch
 from valanga import (
