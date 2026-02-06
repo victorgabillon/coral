@@ -226,7 +226,7 @@ deps = [
   # IMPORTANT: replace local file path with a normal dependency for CI.
   # If valanga is published, use "valanga>=0.1.2".
   # If not, install from VCS or let CI install it separately.
-    "valanga>=0.1.13",
+    "valanga>=0.1.14",
 
   # tools
   "ruff>=0.15.0",
@@ -252,7 +252,7 @@ deps = [
   "dacite",
   "rich",
   "chess",
-    "valanga>=0.1.13",
+    "valanga>=0.1.14",
 
   # tools
   "mypy>=1.18.2",

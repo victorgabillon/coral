@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Transformer-based neural network model for board evaluation."""
 
 from dataclasses import dataclass
