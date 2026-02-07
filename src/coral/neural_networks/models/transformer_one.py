@@ -6,8 +6,8 @@ from typing import Any, Literal
 
 import chess
 import torch
-import torch.nn.functional as functional
 from torch import nn
+from torch.nn import functional
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.nn_model_type import NNModelType
