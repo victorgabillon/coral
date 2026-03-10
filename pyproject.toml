@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80.10.2", "wheel"]
+requires = ["setuptools>=82.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,7 +19,7 @@ authors = [
 
 dependencies = [
 "torch",
-    "valanga>=0.1.14",
+    "valanga>=0.2.2",
     "PyYAML",
     "dacite",
     "rich",
@@ -41,8 +41,8 @@ test = [
 
 
 lint = [
-  "ruff>=0.15.0",
-  "pylint>=4.0.4",
+  "ruff>=0.15.5",
+  "pylint>=4.0.5",
 ]
 
 typecheck = [
@@ -58,8 +58,8 @@ dev = [
     "types-PyYAML>=6.0.12.12",
 
     # Linting & formatting
-    "ruff>=0.15.0",
-    "pylint>=4.0.4",
+    "ruff>=0.15.5",
+    "pylint>=4.0.5",
     "black>=25.1.0",
 
     # Type checking
@@ -226,11 +226,11 @@ deps = [
   # IMPORTANT: replace local file path with a normal dependency for CI.
   # If valanga is published, use "valanga>=0.1.2".
   # If not, install from VCS or let CI install it separately.
-    "valanga>=0.1.13",
+    "valanga>=0.2.2",
 
   # tools
-  "ruff>=0.15.0",
-  "pylint>=4.0.4",
+  "ruff>=0.15.5",
+  "pylint>=4.0.5",
 ]
 set_env = { PYTHONPATH = "{toxinidir}/src" }
 commands = [
@@ -252,7 +252,7 @@ deps = [
   "dacite",
   "rich",
   "chess",
-    "valanga>=0.1.13",
+    "valanga>=0.2.2",
 
   # tools
   "mypy>=1.18.2",

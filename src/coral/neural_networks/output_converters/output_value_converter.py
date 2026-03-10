@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 
 import torch
-from valanga import Color, FloatyStateEvaluation, HasTurn, State
-
+from valanga import Color,  HasTurn, State
+from valanga.evaluations import  Value, Certainty
 
 class OutputValueConverter(ABC):
     """Convert a neural network output to a board evaluation.
@@ -15,7 +15,7 @@ class OutputValueConverter(ABC):
     @abstractmethod
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: State
-    ) -> FloatyStateEvaluation:
+    ) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -23,7 +23,7 @@ class OutputValueConverter(ABC):
             state (State): The state used for the evaluation.
 
         Returns:
-            FloatyBoardEvaluation: The converted board evaluation.
+            Value: The converted board evaluation.
 
         """
         ...
@@ -47,7 +47,7 @@ class TurnOutputValueConverter(ABC):
     @abstractmethod
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
-    ) -> FloatyStateEvaluation:
+    ) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -55,7 +55,7 @@ class TurnOutputValueConverter(ABC):
             state (HasTurn): The state used for the evaluation.
 
         Returns:
-            FloatyBoardEvaluation: The converted board evaluation.
+            Value: The converted board evaluation.
 
         """
         ...
@@ -100,7 +100,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
 
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
-    ) -> FloatyStateEvaluation:
+    ) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -108,15 +108,16 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
             state (HasTurn): The state used for the evaluation.
 
         Returns:
-            FloatyBoardEvaluation: The converted board evaluation.
+            Value: The converted board evaluation.
 
         """
         value: float = output_nn.item()
         value_white: float = self.convert_value_from_mover_viewpoint_to_value_white(
             turn=state.turn, value_from_mover_view_point=value
         )
-        state_evaluation: FloatyStateEvaluation = FloatyStateEvaluation(
-            value_white=value_white
+        state_evaluation: Value = Value(
+            score=value_white,
+certainty=Certainty.ESTIMATE
         )
         return state_evaluation
 
@@ -140,7 +141,7 @@ class IdentityConverter(TurnOutputValueConverter):
 
     def to_content_evaluation(
         self, output_nn: torch.Tensor, state: HasTurn
-    ) -> FloatyStateEvaluation:
+    ) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -148,12 +149,13 @@ class IdentityConverter(TurnOutputValueConverter):
             state (HasTurn): The state used for the evaluation.
 
         Returns:
-            FloatyBoardEvaluation: The converted board evaluation.
+            Value: The converted board evaluation.
 
         """
         value_white: float = output_nn.item()
-        state_evaluation: FloatyStateEvaluation = FloatyStateEvaluation(
-            value_white=value_white
+        state_evaluation: Value = Value(
+            score=value_white,
+            certainty=Certainty.ESTIMATE
         )
         return state_evaluation
 

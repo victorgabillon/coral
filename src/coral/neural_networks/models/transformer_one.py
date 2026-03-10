@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 import chess
 import torch
-import torch.nn.functional as functional
+from torch.nn import functional
 from torch import nn
 
 from coral.chi_nn import ChiNN

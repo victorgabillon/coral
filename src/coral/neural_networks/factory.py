@@ -33,8 +33,7 @@ from coral.neural_networks.nn_state_evaluator import (
 from coral.neural_networks.output_converters.factory import (
     create_output_converter,
 )
-from coral.utils.small_tools import MyPath, yaml_fetch_args_in_file
-
+from coral.utils.small_tools import MyPath, yaml_fetch_args_in_file, resolve_package_path
 if TYPE_CHECKING:
     from coral.neural_networks.output_converters.output_value_converter import (
         TurnOutputValueConverter,
@@ -75,7 +74,7 @@ class NeuralNetModelsAndArchitecture:
             NeuralNetModelsAndArchitecture: An initialized instance.
 
         """
-        nn_args = get_architecture_args_from_folder(folder_path=folder_path)
+        nn_args = get_architecture_args_from_folder(folder_path=str(resolve_package_path(str(folder_path))))
         model_file = os.path.join(folder_path, nn_args.filename() + ".pt")
 
         return cls(model_weights_file_name=model_file, nn_architecture_args=nn_args)

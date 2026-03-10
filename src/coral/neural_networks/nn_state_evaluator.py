@@ -5,8 +5,10 @@ from typing import Protocol
 
 import torch
 from valanga import (
-    FloatyStateEvaluation,
     HasTurn,
+)
+from valanga.evaluations import (
+    Value,
 )
 
 from coral.chi_nn import ChiNN
@@ -27,7 +29,7 @@ class NNStateEvaluator[StateT](Protocol):
     content_to_input_convert: ContentToInputFunction[StateT]
 
     @abstractmethod
-    def value_white(self, state: StateT) -> float:  # pylint: disable=unused-argument
+    def evaluate(self, state: StateT) -> Value:  # pylint: disable=unused-argument
         """Return the white player value for a given state."""
         ...
 
@@ -68,32 +70,30 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
-    def value_white(self, state: StateT) -> float:
+    def evaluate(self, state: StateT) -> Value:
         """Evaluate the value for the white player.
 
         Args:
             state (StateT): The state to evaluate.
 
         Returns:
-            float: The value for the white player.
+            Value: The value for the white player.
 
         """
         input_layer: torch.Tensor = self.content_to_input_convert(state=state)
         with torch.no_grad():
             output_layer = self.scripted_net(input_layer)
 
-        content_evaluation: FloatyStateEvaluation = (
+        content_evaluation: Value = (
             self.output_and_value_converter.to_content_evaluation(
                 output_nn=output_layer, state=state
             )
         )
-        value_white: float | None = content_evaluation.value_white
-        assert value_white is not None
-        return value_white
+        return content_evaluation
 
-    def evaluate(
+    def evaluate_tensor(
         self, input_layer: torch.Tensor, state: HasTurn
-    ) -> FloatyStateEvaluation:
+    ) -> Value:
         """Evaluate the board position.
 
         Args:
@@ -101,7 +101,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
             state (HasTurn): The state with turn information
 
         Returns:
-            FloatyBoardEvaluation: The evaluation of the board position
+            Value: The evaluation of the board position
 
         """
         self.scripted_net.eval()
