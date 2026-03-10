@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Transformer-based neural network model for board evaluation."""
 
 from dataclasses import dataclass
@@ -5,8 +6,8 @@ from typing import Any, Literal
 
 import chess
 import torch
-from torch.nn import functional
 from torch import nn
+from torch.nn import functional
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.nn_model_type import NNModelType

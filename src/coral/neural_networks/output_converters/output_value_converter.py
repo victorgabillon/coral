@@ -3,8 +3,9 @@
 from abc import ABC, abstractmethod
 
 import torch
-from valanga import Color,  HasTurn, State
-from valanga.evaluations import  Value, Certainty
+from valanga import Color, HasTurn, State
+from valanga.evaluations import Certainty, Value
+
 
 class OutputValueConverter(ABC):
     """Convert a neural network output to a board evaluation.
@@ -13,9 +14,7 @@ class OutputValueConverter(ABC):
     """
 
     @abstractmethod
-    def to_content_evaluation(
-        self, output_nn: torch.Tensor, state: State
-    ) -> Value:
+    def to_content_evaluation(self, output_nn: torch.Tensor, state: State) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -45,9 +44,7 @@ class TurnOutputValueConverter(ABC):
     """
 
     @abstractmethod
-    def to_content_evaluation(
-        self, output_nn: torch.Tensor, state: HasTurn
-    ) -> Value:
+    def to_content_evaluation(self, output_nn: torch.Tensor, state: HasTurn) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -98,9 +95,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
             value_white = value_from_mover_view_point
         return value_white
 
-    def to_content_evaluation(
-        self, output_nn: torch.Tensor, state: HasTurn
-    ) -> Value:
+    def to_content_evaluation(self, output_nn: torch.Tensor, state: HasTurn) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -115,10 +110,7 @@ class PlayerToMoveValueToValueWhiteConverter(TurnOutputValueConverter):
         value_white: float = self.convert_value_from_mover_viewpoint_to_value_white(
             turn=state.turn, value_from_mover_view_point=value
         )
-        state_evaluation: Value = Value(
-            score=value_white,
-certainty=Certainty.ESTIMATE
-        )
+        state_evaluation: Value = Value(score=value_white, certainty=Certainty.ESTIMATE)
         return state_evaluation
 
     def from_value_white_to_model_output(
@@ -139,9 +131,7 @@ certainty=Certainty.ESTIMATE
 class IdentityConverter(TurnOutputValueConverter):
     """Converting from a NN that outputs a 1D value from the point of view of the player to move."""
 
-    def to_content_evaluation(
-        self, output_nn: torch.Tensor, state: HasTurn
-    ) -> Value:
+    def to_content_evaluation(self, output_nn: torch.Tensor, state: HasTurn) -> Value:
         """Convert the output of the neural network to a content evaluation.
 
         Args:
@@ -153,10 +143,7 @@ class IdentityConverter(TurnOutputValueConverter):
 
         """
         value_white: float = output_nn.item()
-        state_evaluation: Value = Value(
-            score=value_white,
-            certainty=Certainty.ESTIMATE
-        )
+        state_evaluation: Value = Value(score=value_white, certainty=Certainty.ESTIMATE)
         return state_evaluation
 
     def from_value_white_to_model_output(

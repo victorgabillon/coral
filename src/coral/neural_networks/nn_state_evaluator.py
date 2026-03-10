@@ -91,9 +91,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         )
         return content_evaluation
 
-    def evaluate_tensor(
-        self, input_layer: torch.Tensor, state: HasTurn
-    ) -> Value:
+    def evaluate_tensor(self, input_layer: torch.Tensor, state: HasTurn) -> Value:
         """Evaluate the board position.
 
         Args:
