@@ -9,6 +9,7 @@ from torch import nn
 class NNModelType(StrEnum):
     """Defines the types of neural network models."""
 
+    ENTITY_TOKEN_TRANSFORMER_VALUE_NET = "entity_token_transformer_value_net"
     MULTI_LAYER_PERCEPTRON = "multi_layer_perceptron"
     TRANSFORMER = "transformer"
 

@@ -13,6 +13,10 @@ from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
     ContentToInputFunction,
 )
+from coral.neural_networks.models.entity_token_transformer_value_net import (
+    EntityTokenTransformerValueNet,
+    EntityTokenTransformerValueNetArgs,
+)
 from coral.neural_networks.models.multi_layer_perceptron import (
     MultiLayerPerceptron,
     MultiLayerPerceptronArgs,
@@ -126,6 +130,8 @@ def create_nn(nn_type_args: NNModelTypeArgs) -> ChiNN:
     """Create a neural network."""
     net: ChiNN
     match nn_type_args:
+        case EntityTokenTransformerValueNetArgs():
+            net = EntityTokenTransformerValueNet(args=nn_type_args)
         case MultiLayerPerceptronArgs():
             net = MultiLayerPerceptron(args=nn_type_args)
         case TransformerArgs():
