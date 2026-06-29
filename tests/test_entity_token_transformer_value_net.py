@@ -125,12 +125,40 @@ def test_all_padding_input_does_not_nan() -> None:
     assert torch.isfinite(out).all()
 
 
+def test_zero_layer_model_forward_works() -> None:
+    """The value-token path works when the transformer encoder has no layers."""
+    model = EntityTokenTransformerValueNet(_small_args(n_layer=0))
+    x = torch.randn(2, 4, 5)
+    x[:, :, -1] = 1.0
+
+    out = model(x)
+
+    assert out.shape == (2, 1)
+
+
+def test_all_padding_without_value_token_does_not_nan() -> None:
+    """All-padding masked mean is finite without a value token."""
+    model = EntityTokenTransformerValueNet(
+        _small_args(pooling="masked_mean", use_value_token=False)
+    )
+    x = torch.randn(2, 4, 5)
+    x[:, :, -1] = 0.0
+
+    out = model(x)
+
+    assert out.shape == (2, 1)
+    assert torch.isfinite(out).all()
+
+
 def test_wrong_rank_raises_value_error() -> None:
     """Only T x F and B x T x F inputs are accepted."""
     model = EntityTokenTransformerValueNet(_small_args())
 
     with pytest.raises(ValueError):
         model(torch.randn(5))
+
+    with pytest.raises(ValueError):
+        model(torch.randn(2, 3, 4, 5))
 
 
 def test_wrong_feature_dimension_raises_value_error() -> None:

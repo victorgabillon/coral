@@ -1,7 +1,9 @@
 """Generic transformer value model for padded entity-token inputs."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 import torch
 from torch import nn
@@ -176,6 +178,58 @@ class EntityTokenTransformerValueNet(ChiNN):
             dim=-1,
         )
 
+    def _append_value_token(
+        self,
+        hidden: torch.Tensor,
+        padding_mask: torch.Tensor,
+        device: torch.device,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Add the learned value token and mark it as unmasked."""
+        if not self.args.use_value_token:
+            return hidden, padding_mask
+        if self.value_token is None:
+            raise RuntimeError
+
+        batch_size = hidden.shape[0]
+        value_token = self.value_token.expand(batch_size, 1, -1)
+        value_padding = torch.zeros(batch_size, 1, dtype=torch.bool, device=device)
+        return (
+            torch.cat([value_token, hidden], dim=1),
+            torch.cat([value_padding, padding_mask], dim=1),
+        )
+
+    def _safe_padding_mask(self, padding_mask: torch.Tensor) -> torch.Tensor:
+        """Ensure each row has at least one unmasked token for attention."""
+        all_masked = padding_mask.all(dim=1)
+        if not torch.any(all_masked):
+            return padding_mask
+
+        safe_padding_mask = padding_mask.clone()
+        safe_padding_mask[all_masked, 0] = False
+        return safe_padding_mask
+
+    def _encode(
+        self, hidden: torch.Tensor, safe_padding_mask: torch.Tensor
+    ) -> torch.Tensor:
+        """Run the configured encoder."""
+        if self.args.n_layer > 0:
+            return cast(
+                "torch.Tensor",
+                self.encoder(hidden, src_key_padding_mask=safe_padding_mask),
+            )
+        return cast("torch.Tensor", self.encoder(hidden))
+
+    def _pool(self, encoded: torch.Tensor, valid_tokens: torch.Tensor) -> torch.Tensor:
+        """Pool encoded tokens into one value vector per batch row."""
+        if self.args.pooling == "value_token":
+            return encoded[:, 0, :]
+        if self.args.pooling == "masked_mean":
+            entity_encoded = encoded[:, 1:, :] if self.args.use_value_token else encoded
+            weights = valid_tokens.to(entity_encoded.dtype).unsqueeze(-1)
+            denominator = weights.sum(dim=1).clamp_min(1.0)
+            return (entity_encoded * weights).sum(dim=1) / denominator
+        raise RuntimeError
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run a forward pass for input shaped T x F or B x T x F."""
         x, was_unbatched = self._normalize_input(x)
@@ -186,39 +240,11 @@ class EntityTokenTransformerValueNet(ChiNN):
         hidden = hidden * valid_tokens.unsqueeze(-1).to(hidden.dtype)
 
         padding_mask = ~valid_tokens
-        batch_size = hidden.shape[0]
+        hidden, padding_mask = self._append_value_token(hidden, padding_mask, x.device)
+        encoded = self._encode(hidden, self._safe_padding_mask(padding_mask))
+        pooled = self._pool(encoded, valid_tokens)
 
-        if self.args.use_value_token:
-            if self.value_token is None:
-                raise RuntimeError
-            value_token = self.value_token.expand(batch_size, 1, -1)
-            hidden = torch.cat([value_token, hidden], dim=1)
-            value_padding = torch.zeros(batch_size, 1, dtype=torch.bool, device=x.device)
-            padding_mask = torch.cat([value_padding, padding_mask], dim=1)
-
-        # PyTorch attention can emit NaN when every position in a row is masked.
-        safe_padding_mask = padding_mask
-        all_masked = safe_padding_mask.all(dim=1)
-        if torch.any(all_masked):
-            safe_padding_mask = safe_padding_mask.clone()
-            safe_padding_mask[all_masked, 0] = False
-
-        if self.args.n_layer > 0:
-            encoded = self.encoder(hidden, src_key_padding_mask=safe_padding_mask)
-        else:
-            encoded = self.encoder(hidden)
-
-        if self.args.pooling == "value_token":
-            pooled = encoded[:, 0, :]
-        elif self.args.pooling == "masked_mean":
-            entity_encoded = encoded[:, 1:, :] if self.args.use_value_token else encoded
-            weights = valid_tokens.to(entity_encoded.dtype).unsqueeze(-1)
-            denominator = weights.sum(dim=1).clamp_min(1.0)
-            pooled = (entity_encoded * weights).sum(dim=1) / denominator
-        else:
-            raise RuntimeError
-
-        out = self.output_activation(self.value_head(pooled))
+        out = cast("torch.Tensor", self.output_activation(self.value_head(pooled)))
         if was_unbatched:
             return out.squeeze(0)
         return out

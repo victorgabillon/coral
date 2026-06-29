@@ -3,6 +3,7 @@
 from enum import Enum
 
 import dacite
+import torch
 
 from coral.board_evaluation import PointOfView
 from coral.neural_networks.factory import create_nn
@@ -13,6 +14,7 @@ from coral.neural_networks.models.entity_token_transformer_value_net import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
+from coral.neural_networks.nn_model_type import NNModelType
 from coral.neural_networks.output_converters.model_output_type import (
     ModelOutputType,
 )
@@ -33,7 +35,9 @@ def test_factory_creates_entity_token_transformer_value_net() -> None:
     assert isinstance(net, EntityTokenTransformerValueNet)
 
 
-def test_neural_net_architecture_args_filename_includes_model_and_point_of_view() -> None:
+def test_neural_net_architecture_args_filename_includes_model_and_point_of_view() -> (
+    None
+):
     """Architecture filenames compose model type details and output point of view."""
     args = NeuralNetArchitectureArgs(
         model_type_args=EntityTokenTransformerValueNetArgs(
@@ -77,5 +81,24 @@ def test_dacite_parses_yaml_like_architecture_dict() -> None:
     )
 
     assert isinstance(args.model_type_args, EntityTokenTransformerValueNetArgs)
-    assert args.model_type_args.type == "entity_token_transformer_value_net"
+    assert args.model_type_args.type == NNModelType.ENTITY_TOKEN_TRANSFORMER_VALUE_NET
     assert args.model_output_type.point_of_view == PointOfView.PLAYER_TO_MOVE
+
+
+def test_factory_created_model_forward() -> None:
+    """A factory-created entity-token transformer can run a forward pass."""
+    model = create_nn(
+        EntityTokenTransformerValueNetArgs(
+            input_feature_dim=5,
+            d_model=16,
+            n_head=4,
+            n_layer=1,
+            dim_feedforward=32,
+        )
+    )
+    x = torch.randn(2, 5, 5)
+    x[:, :, -1] = 1.0
+
+    y = model(x)
+
+    assert y.shape == (2, 1)
