@@ -8,6 +8,10 @@ from coral.neural_networks.models.multi_layer_perceptron import (
     MultiLayerPerceptron,
     MultiLayerPerceptronArgs,
 )
+from coral.neural_networks.models.relation_biased_entity_token_transformer_value_net import (
+    RelationBiasedEntityTokenTransformerValueNet,
+    RelationBiasedEntityTokenTransformerValueNetArgs,
+)
 from coral.neural_networks.models.transformer_one import (
     TransformerArgs,
     TransformerOne,
@@ -18,6 +22,8 @@ __all__ = [
     "EntityTokenTransformerValueNetArgs",
     "MultiLayerPerceptron",
     "MultiLayerPerceptronArgs",
+    "RelationBiasedEntityTokenTransformerValueNet",
+    "RelationBiasedEntityTokenTransformerValueNetArgs",
     "TransformerArgs",
     "TransformerOne",
 ]

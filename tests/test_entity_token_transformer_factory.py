@@ -11,6 +11,10 @@ from coral.neural_networks.models.entity_token_transformer_value_net import (
     EntityTokenTransformerValueNet,
     EntityTokenTransformerValueNetArgs,
 )
+from coral.neural_networks.models.relation_biased_entity_token_transformer_value_net import (
+    RelationBiasedEntityTokenTransformerValueNet,
+    RelationBiasedEntityTokenTransformerValueNetArgs,
+)
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
@@ -102,3 +106,74 @@ def test_factory_created_model_forward() -> None:
     y = model(x)
 
     assert y.shape == (2, 1)
+
+
+def test_factory_creates_relation_biased_entity_token_transformer() -> None:
+    """The relational subclass is matched before its ordinary parent class."""
+    args = RelationBiasedEntityTokenTransformerValueNetArgs(
+        input_feature_dim=5,
+        d_model=16,
+        n_head=4,
+        n_layer=1,
+        dim_feedforward=32,
+        num_relation_types=6,
+    )
+
+    net = create_nn(args)
+
+    assert isinstance(net, RelationBiasedEntityTokenTransformerValueNet)
+
+
+def test_dacite_parses_relation_biased_architecture_dict() -> None:
+    """Dacite selects relational args from the architecture union."""
+    data = {
+        "model_type_args": {
+            "type": "relation_biased_entity_token_transformer_value_net",
+            "input_feature_dim": 5,
+            "d_model": 16,
+            "n_head": 4,
+            "n_layer": 1,
+            "dim_feedforward": 32,
+            "dropout_ratio": 0.0,
+            "pooling": "value_token",
+            "num_relation_types": 6,
+        },
+        "model_output_type": {"point_of_view": "player_to_move"},
+    }
+
+    args = dacite.from_dict(
+        data_class=NeuralNetArchitectureArgs,
+        data=data,
+        config=dacite.Config(cast=[Enum]),
+    )
+
+    assert isinstance(
+        args.model_type_args,
+        RelationBiasedEntityTokenTransformerValueNetArgs,
+    )
+    assert (
+        args.model_type_args.type
+        == NNModelType.RELATION_BIASED_ENTITY_TOKEN_TRANSFORMER_VALUE_NET
+    )
+    assert args.model_type_args.num_relation_types == 6
+
+
+def test_factory_created_relational_model_forward() -> None:
+    """A factory-created relational transformer accepts both model inputs."""
+    model = create_nn(
+        RelationBiasedEntityTokenTransformerValueNetArgs(
+            input_feature_dim=5,
+            d_model=16,
+            n_head=4,
+            n_layer=1,
+            dim_feedforward=32,
+            num_relation_types=6,
+        )
+    )
+    tokens = torch.randn(2, 5, 5)
+    tokens[:, :, -1] = 1.0
+    relations = torch.tensor([[[0, 1, 1]], [[2, 3, 2]]])
+
+    output = model(tokens, relations)
+
+    assert output.shape == (2, 1)

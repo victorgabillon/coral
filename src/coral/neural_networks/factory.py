@@ -21,6 +21,10 @@ from coral.neural_networks.models.multi_layer_perceptron import (
     MultiLayerPerceptron,
     MultiLayerPerceptronArgs,
 )
+from coral.neural_networks.models.relation_biased_entity_token_transformer_value_net import (
+    RelationBiasedEntityTokenTransformerValueNet,
+    RelationBiasedEntityTokenTransformerValueNetArgs,
+)
 from coral.neural_networks.models.transformer_one import (
     TransformerArgs,
     TransformerOne,
@@ -130,6 +134,8 @@ def create_nn(nn_type_args: NNModelTypeArgs) -> ChiNN:
     """Create a neural network."""
     net: ChiNN
     match nn_type_args:
+        case RelationBiasedEntityTokenTransformerValueNetArgs():
+            net = RelationBiasedEntityTokenTransformerValueNet(args=nn_type_args)
         case EntityTokenTransformerValueNetArgs():
             net = EntityTokenTransformerValueNet(args=nn_type_args)
         case MultiLayerPerceptronArgs():

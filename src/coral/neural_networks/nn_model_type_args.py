@@ -6,10 +6,16 @@ from coral.neural_networks.models.entity_token_transformer_value_net import (
 from coral.neural_networks.models.multi_layer_perceptron import (
     MultiLayerPerceptronArgs,
 )
+from coral.neural_networks.models.relation_biased_entity_token_transformer_value_net import (
+    RelationBiasedEntityTokenTransformerValueNetArgs,
+)
 from coral.neural_networks.models.transformer_one import (
     TransformerArgs,
 )
 
 NNModelTypeArgs = (
-    EntityTokenTransformerValueNetArgs | MultiLayerPerceptronArgs | TransformerArgs
+    RelationBiasedEntityTokenTransformerValueNetArgs
+    | EntityTokenTransformerValueNetArgs
+    | MultiLayerPerceptronArgs
+    | TransformerArgs
 )

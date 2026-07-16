@@ -209,13 +209,30 @@ class EntityTokenTransformerValueNet(ChiNN):
         return safe_padding_mask
 
     def _encode(
-        self, hidden: torch.Tensor, safe_padding_mask: torch.Tensor
+        self,
+        hidden: torch.Tensor,
+        safe_padding_mask: torch.Tensor,
+        *,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Run the configured encoder."""
         if self.args.n_layer > 0:
+            encoder_padding_mask = safe_padding_mask
+            if attention_mask is not None and attention_mask.is_floating_point():
+                encoder_padding_mask = torch.zeros(
+                    safe_padding_mask.shape,
+                    dtype=hidden.dtype,
+                    device=hidden.device,
+                )
+                encoder_padding_mask.masked_fill_(safe_padding_mask, float("-inf"))
             return cast(
                 "torch.Tensor",
-                self.encoder(hidden, src_key_padding_mask=safe_padding_mask),
+                self.encoder(
+                    hidden,
+                    mask=attention_mask,
+                    src_key_padding_mask=encoder_padding_mask,
+                    is_causal=False,
+                ),
             )
         return cast("torch.Tensor", self.encoder(hidden))
 
@@ -230,8 +247,10 @@ class EntityTokenTransformerValueNet(ChiNN):
             return (entity_encoded * weights).sum(dim=1) / denominator
         raise RuntimeError
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Run a forward pass for input shaped T x F or B x T x F."""
+    def _prepare_encoder_inputs(
+        self, x: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, bool]:
+        """Prepare hidden tokens, padding, validity, and input batch metadata."""
         x, was_unbatched = self._normalize_input(x)
         valid_tokens = self._validity_mask(x)
         features = self._remove_validity_feature(x)
@@ -241,13 +260,34 @@ class EntityTokenTransformerValueNet(ChiNN):
 
         padding_mask = ~valid_tokens
         hidden, padding_mask = self._append_value_token(hidden, padding_mask, x.device)
-        encoded = self._encode(hidden, self._safe_padding_mask(padding_mask))
+        return (
+            hidden,
+            self._safe_padding_mask(padding_mask),
+            valid_tokens,
+            was_unbatched,
+        )
+
+    def _finalize_output(
+        self,
+        encoded: torch.Tensor,
+        valid_tokens: torch.Tensor,
+        was_unbatched: bool,
+    ) -> torch.Tensor:
+        """Pool encoded tokens and restore the caller's batch convention."""
         pooled = self._pool(encoded, valid_tokens)
 
         out = cast("torch.Tensor", self.output_activation(self.value_head(pooled)))
         if was_unbatched:
             return out.squeeze(0)
         return out
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run a forward pass for input shaped T x F or B x T x F."""
+        hidden, safe_padding_mask, valid_tokens, was_unbatched = (
+            self._prepare_encoder_inputs(x)
+        )
+        encoded = self._encode(hidden, safe_padding_mask)
+        return self._finalize_output(encoded, valid_tokens, was_unbatched)
 
     def _parameter_summary(self) -> str:
         """Return a compact parameter summary."""
