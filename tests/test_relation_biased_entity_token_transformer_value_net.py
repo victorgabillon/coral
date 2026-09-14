@@ -49,6 +49,57 @@ def test_two_relation_types_are_accepted() -> None:
     assert _small_args(num_relation_types=2).num_relation_types == 2
 
 
+@pytest.mark.parametrize("scale", [-0.1, float("inf"), float("nan")])
+def test_invalid_relation_scale_is_rejected(scale: float) -> None:
+    """Persisted relation scaling must be finite and nonnegative."""
+    with pytest.raises(ValueError):
+        _small_args(relation_bias_scale=scale)
+
+
+def test_relation_scale_matches_scaled_weights_and_scales_gradients() -> None:
+    """The 0.25 configuration scales actual attention, including its gradient."""
+    torch.manual_seed(3)
+    scaled = RelationBiasedEntityTokenTransformerValueNet(
+        _small_args(relation_bias_scale=0.25)
+    )
+    reference = RelationBiasedEntityTokenTransformerValueNet(_small_args())
+    with torch.no_grad():
+        scaled.relation_bias.weight[1].copy_(torch.tensor([0.3, -0.5, 0.8, 0.2]))
+    reference.load_state_dict(scaled.state_dict())
+    with torch.no_grad():
+        reference.relation_bias.weight.mul_(0.25)
+    tokens = _valid_tokens(1, 5)
+    relations = torch.tensor([[[0, 1, 1]]])
+    actual = scaled(tokens, relations)
+    expected = reference(tokens, relations)
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    actual.sum().backward()
+    expected.sum().backward()
+    assert scaled.relation_bias.weight.grad is not None
+    assert reference.relation_bias.weight.grad is not None
+    torch.testing.assert_close(
+        scaled.relation_bias.weight.grad, reference.relation_bias.weight.grad * 0.25
+    )
+
+
+def test_eval_preserves_additive_bias_magnitudes() -> None:
+    """Inference must agree with the unfused training computation at dropout zero."""
+    torch.manual_seed(31)
+    model = RelationBiasedEntityTokenTransformerValueNet(
+        _small_args(relation_bias_scale=0.25)
+    )
+    with torch.no_grad():
+        model.relation_bias.weight[1].copy_(torch.tensor([0.5, 1.0, -0.5, -1.0]))
+    tokens = _valid_tokens(2, 5)
+    relations = torch.tensor([[[0, 1, 1]], [[2, 3, 1]]])
+    with torch.inference_mode():
+        model.train()
+        expected = model(tokens, relations)
+        model.eval()
+        actual = model(tokens, relations)
+        torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-7)
+
+
 def test_args_filename_and_string_include_relation_count() -> None:
     """Architecture descriptions distinguish relation vocabulary sizes."""
     args = _small_args(pooling="masked_mean", output_tanh=False)

@@ -225,6 +225,9 @@ class EntityTokenTransformerValueNet(ChiNN):
                     device=hidden.device,
                 )
                 encoder_padding_mask.masked_fill_(safe_padding_mask, float("-inf"))
+                return self._encode_additive_bias(
+                    hidden, attention_mask, encoder_padding_mask
+                )
             return cast(
                 "torch.Tensor",
                 self.encoder(
@@ -235,6 +238,43 @@ class EntityTokenTransformerValueNet(ChiNN):
                 ),
             )
         return cast("torch.Tensor", self.encoder(hidden))
+
+    def _encode_additive_bias(
+        self,
+        hidden: torch.Tensor,
+        attention_mask: torch.Tensor,
+        padding_mask: torch.Tensor,
+    ) -> torch.Tensor:
+        """Preserve real-valued logit biases in training and inference.
+
+        The fused encoder inference path can discard additive mask magnitudes.
+        Use public layer operations with the same parameters and ordering;
+        avoid a process-wide fast-path switch or a new serialization format.
+        """
+        encoder = cast("nn.TransformerEncoder", self.encoder)
+        for module in encoder.layers:
+            layer = cast("nn.TransformerEncoderLayer", module)
+            attention_input = layer.norm1(hidden) if layer.norm_first else hidden
+            attention = layer.self_attn(
+                attention_input,
+                attention_input,
+                attention_input,
+                attn_mask=attention_mask,
+                key_padding_mask=padding_mask,
+                need_weights=False,
+                is_causal=False,
+            )[0]
+            hidden = hidden + layer.dropout1(attention)
+            if not layer.norm_first:
+                hidden = layer.norm1(hidden)
+            feedforward_input = layer.norm2(hidden) if layer.norm_first else hidden
+            feedforward = layer.linear2(
+                layer.dropout(layer.activation(layer.linear1(feedforward_input)))
+            )
+            hidden = hidden + layer.dropout2(feedforward)
+            if not layer.norm_first:
+                hidden = layer.norm2(hidden)
+        return encoder.norm(hidden) if encoder.norm is not None else hidden
 
     def _pool(self, encoded: torch.Tensor, valid_tokens: torch.Tensor) -> torch.Tensor:
         """Pool encoded tokens into one value vector per batch row."""
