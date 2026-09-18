@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "algorhino-coral"
-version = "0.1.14"
+version = "0.1.15"
 description = "Shared types and utilities for evalaution"
 requires-python = ">=3.13"
 
@@ -41,30 +41,30 @@ test = [
 
 
 lint = [
-  "ruff>=0.15.20",
-  "pylint>=4.0.6",
+  "ruff==0.15.20",
+  "pylint==4.0.6",
 ]
 
 typecheck = [
-  "mypy>=2.1.0",
-  "pyright[nodejs]>=1.1.411",
+  "mypy==2.1.0",
+  "pyright[nodejs]==1.1.411",
   "types-PyYAML>=6.0.12.20260518",
 ]
 
 
 dev = [
     # Development dependencies (includes test)
-    "tox>=4.56.1",
+    "tox==4.56.1",
     "types-PyYAML>=6.0.12.20260518",
 
     # Linting & formatting
-    "ruff>=0.15.20",
-    "pylint>=4.0.6",
+    "ruff==0.15.20",
+    "pylint==4.0.6",
     "black>=26.5.1",
 
     # Type checking
-    "mypy>=2.1.0",
-    "pyright>=1.1.411",
+    "mypy==2.1.0",
+    "pyright==1.1.411",
 
     # Building & publishing
     "build",
@@ -188,7 +188,7 @@ reportPrivateImportUsage = false
 
 [tool.tox]
 min_version = "4.56.1"
-env_list = ["py313", "lint", "typecheck", "build"]
+env_list = ["py313", "ruff", "static", "build"]
 isolated_build = true
 
 [tool.tox.env_run_base]
@@ -226,8 +226,8 @@ deps = [
     "valanga>=0.2.3",
 
   # tools
-  "ruff>=0.15.20",
-  "pylint>=4.0.6",
+  "ruff==0.15.20",
+  "pylint==4.0.6",
 ]
 set_env = { PYTHONPATH = "{toxinidir}/src" }
 commands = [
@@ -252,8 +252,8 @@ deps = [
     "valanga>=0.2.3",
 
   # tools
-  "mypy>=2.1.0",
-  "pyright[nodejs]>=1.1.411",
+  "mypy==2.1.0",
+  "pyright[nodejs]==1.1.411",
   "types-PyYAML>=6.0.12.20260518",
 ]
 set_env = { MYPYPATH = "{toxinidir}/src" }
@@ -278,3 +278,19 @@ commands = [
 ]
 
 #################### END TOX ####################
+
+# Strict developer lint/typecheck environments remain available above.
+[tool.tox.env.ruff]
+package = "skip"
+deps = ["ruff==0.15.20"]
+commands = [
+  ["python", "-m", "ruff", "check", "src", "tests", "scripts"],
+  ["python", "-m", "ruff", "format", "--check", "src", "tests", "scripts"],
+]
+
+[tool.tox.env.static]
+description = "visible inherited debt; new diagnostics and baseline growth fail"
+package = "editable"
+extras = ["lint", "typecheck"]
+pass_env = ["CI", "STATIC_ANALYSIS_BASE_REF"]
+commands = [["python", "scripts/static_analysis_ratchet.py", "--source", "src/coral", "--output", "{envtmpdir}/static-analysis"]]

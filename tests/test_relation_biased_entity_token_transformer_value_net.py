@@ -100,6 +100,43 @@ def test_eval_preserves_additive_bias_magnitudes() -> None:
         torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-7)
 
 
+def test_scaling_preserves_legacy_weight_schema_and_zero_disables_bias() -> None:
+    """Scaling adds no weight keys and zero ignores nonzero learned relation biases."""
+    legacy = RelationBiasedEntityTokenTransformerValueNet(_small_args())
+    disabled = RelationBiasedEntityTokenTransformerValueNet(
+        _small_args(relation_bias_scale=0.0)
+    )
+    with torch.no_grad():
+        legacy.relation_bias.weight[1].fill_(0.5)
+    disabled.load_state_dict(legacy.state_dict(), strict=True)
+    assert set(legacy.state_dict()) == set(disabled.state_dict())
+    disabled.eval()
+    tokens = _valid_tokens(1, 5)
+    with torch.inference_mode():
+        actual = disabled(tokens, torch.tensor([[[0, 1, 1]]]))
+        expected = disabled(tokens, torch.empty(1, 0, 3, dtype=torch.long))
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+def test_additive_encoder_matches_standard_unfused_training_computation() -> None:
+    """The inference correction preserves the original public encoder computation."""
+    torch.manual_seed(11)
+    model = RelationBiasedEntityTokenTransformerValueNet(_small_args())
+    model.train()
+    hidden = torch.randn(2, 6, 16)
+    padding = torch.zeros(2, 6, dtype=torch.bool)
+    padding[:, -1] = True
+    additive_padding = torch.zeros(2, 6).masked_fill(padding, float("-inf"))
+    attention_bias = torch.randn(8, 6, 6) * 0.25
+
+    expected = model.encoder(
+        hidden, mask=attention_bias, src_key_padding_mask=additive_padding
+    )
+    actual = model._encode(hidden, padding, attention_mask=attention_bias)
+
+    torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-7)
+
+
 def test_args_filename_and_string_include_relation_count() -> None:
     """Architecture descriptions distinguish relation vocabulary sizes."""
     args = _small_args(pooling="masked_mean", output_tanh=False)
