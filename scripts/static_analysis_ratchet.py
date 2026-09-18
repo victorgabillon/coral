@@ -97,10 +97,15 @@ def parse_diagnostics(tool: str, output: str, root: Path) -> list[dict[str, Any]
 
 def identities(records: list[dict[str, Any]]) -> Counter[str]:
     """Count stable identities; duplicate occurrences must not disappear in a set."""
-    return Counter(
-        json.dumps({field: record[field] for field in FIELDS}, sort_keys=True)
-        for record in records
-    )
+    result: Counter[str] = Counter()
+    for record in records:
+        identity = {field: record[field] for field in FIELDS}
+        if record["tool"] == "pylint" and record["rule"] == "R0801":
+            # Pylint attaches project-wide similarities to the last visited module.
+            # The message already identifies the actual files and duplicated text.
+            identity.update(file="<project>", scope="<project>", source="")
+        result[json.dumps(identity, sort_keys=True)] += 1
+    return result
 
 
 def compare(

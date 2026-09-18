@@ -106,6 +106,28 @@ def commit_file(root: Path, path: str) -> None:
     )
 
 
+def test_project_duplicate_code_ignores_incidental_reporting_module(
+    ratchet: ModuleType,
+) -> None:
+    """Duplicate-code identity follows its real file pair and text, not visit order."""
+    row = {
+        "tool": "pylint",
+        "rule": "R0801",
+        "file": "last_module.py",
+        "scope": "<module>",
+        "source": "unrelated header",
+        "message": "Similar lines in 2 files ==first:[lines] ==second:[lines] value = 1",
+    }
+    relocated = {**row, "file": "other_module.py", "source": "other header"}
+    added, removed = ratchet.compare([row], [relocated])
+    assert not added and not removed
+    added, _ = ratchet.compare([row], [relocated, relocated])
+    assert sum(added.values()) == 1
+    changed = {**relocated, "message": "Similar lines ==first ==third value = 1"}
+    added, removed = ratchet.compare([row], [changed])
+    assert sum(added.values()) == sum(removed.values()) == 1
+
+
 def test_committed_baseline_cannot_grow_or_restore_removed_debt(
     ratchet: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
