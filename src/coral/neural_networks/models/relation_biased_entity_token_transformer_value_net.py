@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Literal
 
@@ -25,11 +26,14 @@ class RelationBiasedEntityTokenTransformerValueNetArgs(
         NNModelType.RELATION_BIASED_ENTITY_TOKEN_TRANSFORMER_VALUE_NET  # type: ignore[assignment]
     )
     num_relation_types: int = 0
+    relation_bias_scale: float = 1.0
 
     def __post_init__(self) -> None:
         """Validate ordinary and relation-specific hyperparameters."""
         super().__post_init__()
         if self.num_relation_types < 2:
+            raise ValueError
+        if not math.isfinite(self.relation_bias_scale) or self.relation_bias_scale < 0:
             raise ValueError
 
     def __str__(self) -> str:
@@ -153,7 +157,11 @@ class RelationBiasedEntityTokenTransformerValueNet(EntityTokenTransformerValueNe
         if torch.any(~valid_entity_tokens[active_batch_indices, destination_indices]):
             raise ValueError
 
-        bias_per_relation = self.relation_bias(active_relation_types)
+        if self.args.relation_bias_scale == 0:
+            return None
+        bias_per_relation = (
+            self.relation_bias(active_relation_types) * self.args.relation_bias_scale
+        )
         relation_count = active_triples.shape[0]
         head_count = self.args.n_head
         head_indices = torch.arange(head_count, device=device).expand(

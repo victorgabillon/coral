@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "source": "src/coral",
+  "source_commit": "cfb14804095c5ed58e1363e7e025c6413f0b4ab6",
+  "tools": {
+    "mypy": "2.1.0",
+    "pyright": "1.1.411",
+    "pylint": "4.0.6"
+  },
+  "policy_sha256": "b917df24996ec9719f529f42c523daa0008a3aaf64829c481eb14b431a910904",
+  "diagnostics": [
+    {
+      "tool": "pylint",
+      "file": "src/coral/neural_networks/models/entity_token_transformer_value_net.py",
+      "rule": "R0801",
+      "scope": "<module>",
+      "source": "\"\"\"Generic transformer value model for padded entity-token inputs.\"\"\"",
+      "message": "Similar lines in 2 files ==coral.neural_networks.models.entity_token_transformer_value_net:[lines] ==coral.neural_networks.models.relation_biased_entity_token_transformer_value_net:[lines] f\"input_feature_dim={self.input_feature_dim}, \" f\"d_model={self.d_model}, \" f\"n_head={self.n_head}, \" f\"n_layer={self.n_layer}, \" f\"dim_feedforward={self.dim_feedforward}, \" f\"dropout_ratio={self.dropout_ratio}, \" f\"pooling={self.pooling}, \" f\"use_validity_feature={self.use_validity_feature}, \"",
+      "line": 1
+    },
+    {
+      "tool": "pylint",
+      "file": "src/coral/neural_networks/models/relation_biased_entity_token_transformer_value_net.py",
+      "rule": "R0914",
+      "scope": "RelationBiasedEntityTokenTransformerValueNet._build_relation_attention_mask",
+      "source": "def _build_relation_attention_mask(",
+      "message": "Too many local variables (27/15)",
+      "line": 109
+    },
+    {
+      "tool": "pylint",
+      "file": "src/coral/neural_networks/models/relation_biased_entity_token_transformer_value_net.py",
+      "rule": "W0221",
+      "scope": "RelationBiasedEntityTokenTransformerValueNet.forward",
+      "source": "def forward( # type: ignore[override]",
+      "message": "Number of parameters was 2 in 'EntityTokenTransformerValueNet.forward' and is now 3 in overriding 'RelationBiasedEntityTokenTransformerValueNet.forward' method",
+      "line": 204
+    }
+  ]
+}

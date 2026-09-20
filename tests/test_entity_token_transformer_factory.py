@@ -3,6 +3,7 @@
 from enum import Enum
 
 import dacite
+import pytest
 import torch
 
 from coral.board_evaluation import PointOfView
@@ -124,8 +125,9 @@ def test_factory_creates_relation_biased_entity_token_transformer() -> None:
     assert isinstance(net, RelationBiasedEntityTokenTransformerValueNet)
 
 
-def test_dacite_parses_relation_biased_architecture_dict() -> None:
-    """Dacite selects relational args from the architecture union."""
+@pytest.mark.parametrize("scale", [None, 0.25])
+def test_dacite_parses_relation_biased_architecture_dict(scale: float | None) -> None:
+    """Old configs retain scale one; explicit scaling survives architecture parsing."""
     data = {
         "model_type_args": {
             "type": "relation_biased_entity_token_transformer_value_net",
@@ -140,6 +142,9 @@ def test_dacite_parses_relation_biased_architecture_dict() -> None:
         },
         "model_output_type": {"point_of_view": "player_to_move"},
     }
+
+    if scale is not None:
+        data["model_type_args"]["relation_bias_scale"] = scale
 
     args = dacite.from_dict(
         data_class=NeuralNetArchitectureArgs,
@@ -156,6 +161,7 @@ def test_dacite_parses_relation_biased_architecture_dict() -> None:
         == NNModelType.RELATION_BIASED_ENTITY_TOKEN_TRANSFORMER_VALUE_NET
     )
     assert args.model_type_args.num_relation_types == 6
+    assert args.model_type_args.relation_bias_scale == (1.0 if scale is None else scale)
 
 
 def test_factory_created_relational_model_forward() -> None:
