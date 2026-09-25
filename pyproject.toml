@@ -193,7 +193,6 @@ isolated_build = true
 
 [tool.tox.env_run_base]
 base_python = ["python3.13"]
-set_env = { PIP_NO_CACHE_DIR = "1" }
 
 # ----------------
 # Tests (realistic)
@@ -207,7 +206,7 @@ commands_pre = [
   ["python", "-m", "pip", "install", "--only-binary=:all:", "--index-url", "https://download.pytorch.org/whl/cpu", "torch"],
 ]
 commands = [
-  ["pytest", "{posargs}"],
+  ["python", "scripts/ci_test_metrics.py", "--durations=100", "--durations-min=0", "--cov-branch", "--cov-report=term", "--cov-report=json:.ci-reports/coverage.json", "--junitxml=.ci-reports/pytest.xml", "{posargs}"],
 ]
 
 # ----------------

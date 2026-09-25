@@ -9,6 +9,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      PIP_CONSTRAINT: ${{ github.workspace }}/.github/ci-cpu-constraints.txt
+      PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
     strategy:
       matrix:
         python-version: ["3.13"]
@@ -18,16 +21,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
-          docker image prune -af || true
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip"
+
+      - name: Cache CPU dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-cpu-v1-${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', '.github/ci-cpu-constraints.txt') }}
+          restore-keys: |
+            pip-cpu-v1-${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-
 
       - name: Install tox
         run: |
@@ -36,8 +41,24 @@ jobs:
 
       - name: Run tox (tests + lint + typecheck)
         env:
-          # If you keep PIP_NO_CACHE_DIR=1 in tox config, pip caching won't help much.
-          # You can remove this env var if you want to benefit from setup-python's pip cache.
-          PIP_NO_CACHE_DIR: "1"
           STATIC_ANALYSIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: tox
+        run: tox -p 2 -o --parallel-no-spinner
+
+      - name: Record CI environment and disk usage
+        if: always()
+        run: |
+          mkdir -p .ci-reports
+          python -m pip cache info
+          du -sh ~/.cache/pip .tox || true
+          df -h .
+          .tox/py313/bin/python -m pip list --format=json > .ci-reports/dependencies.json
+
+      - name: Retain validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-validation-evidence
+          path: |
+            .ci-reports/
+            .tox/static/tmp/static-analysis/
+          include-hidden-files: true
