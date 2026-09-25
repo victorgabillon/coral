@@ -193,7 +193,6 @@ isolated_build = true
 
 [tool.tox.env_run_base]
 base_python = ["python3.13"]
-set_env = { PIP_NO_CACHE_DIR = "1" }
 
 # ----------------
 # Tests (realistic)

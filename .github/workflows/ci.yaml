@@ -36,9 +36,6 @@ jobs:
 
       - name: Run tox (tests + lint + typecheck)
         env:
-          # If you keep PIP_NO_CACHE_DIR=1 in tox config, pip caching won't help much.
-          # You can remove this env var if you want to benefit from setup-python's pip cache.
-          PIP_NO_CACHE_DIR: "1"
           STATIC_ANALYSIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: tox
 
