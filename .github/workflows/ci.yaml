@@ -42,7 +42,7 @@ jobs:
       - name: Run tox (tests + lint + typecheck)
         env:
           STATIC_ANALYSIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: tox
+        run: tox -p 2 -o --parallel-no-spinner
 
       - name: Record CI environment and disk usage
         if: always()
