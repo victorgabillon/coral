@@ -30,7 +30,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip"
+
+      - name: Cache CPU dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-cpu-v1-${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', '.github/ci-cpu-constraints.txt') }}
+          restore-keys: |
+            pip-cpu-v1-${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-
 
       - name: Install tox
         run: |
