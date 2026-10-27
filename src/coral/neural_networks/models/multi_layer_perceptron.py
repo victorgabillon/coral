@@ -128,10 +128,6 @@ class MultiLayerPerceptron(ChiNN):
             activations=args.list_of_activation_functions,
         )
 
-    def __getstate__(self) -> dict[str, object]:
-        """Get the state of the neural network for pickling."""
-        return self.__dict__.copy()
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the neural network.
 

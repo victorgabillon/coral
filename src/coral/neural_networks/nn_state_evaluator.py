@@ -7,13 +7,12 @@ import torch
 from valanga import (
     HasTurn,
 )
-from valanga.evaluations import (
-    Value,
-)
+from valanga.evaluations import Value
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
     ContentToInputFunction,
+    ModelInput,
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     OutputValueConverter,
@@ -21,12 +20,12 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
-class NNStateEvaluator[StateT](Protocol):
+class NNStateEvaluator[StateT: HasTurn, InputT: ModelInput = torch.Tensor](Protocol):
     """Protocol for Neural Network Content Evaluator."""
 
     net: ChiNN
     output_and_value_converter: OutputValueConverter
-    content_to_input_convert: ContentToInputFunction[StateT]
+    content_to_input_convert: ContentToInputFunction[StateT, InputT]
 
     @abstractmethod
     def evaluate(self, state: StateT) -> Value:  # pylint: disable=unused-argument
@@ -34,7 +33,7 @@ class NNStateEvaluator[StateT](Protocol):
         ...
 
 
-class NNBWStateEvaluator[StateT: HasTurn]:
+class NNBWStateEvaluator[StateT: HasTurn, InputT: ModelInput = torch.Tensor]:
     """The Generic Neural network class for board evaluation.
 
     Attributes:
@@ -46,13 +45,13 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
     net: ChiNN
     output_and_value_converter: TurnOutputValueConverter
-    content_to_input_convert: ContentToInputFunction[StateT]
+    content_to_input_convert: ContentToInputFunction[StateT, InputT]
 
     def __init__(
         self,
         net: ChiNN,
         output_and_value_converter: TurnOutputValueConverter,
-        content_to_input_convert: ContentToInputFunction[StateT],
+        content_to_input_convert: ContentToInputFunction[StateT, InputT],
         script: bool = True,
     ) -> None:
         """Initialize the NNBoardEvaluator.
@@ -66,7 +65,8 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         """
         self.net = net
         self.scripted_net = torch.jit.script(net) if script else net
-        self.net.eval()  # do once
+        self.net.eval()
+        self.scripted_net.eval()
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
@@ -80,8 +80,8 @@ class NNBWStateEvaluator[StateT: HasTurn]:
             Value: The value for the white player.
 
         """
-        input_layer: torch.Tensor = self.content_to_input_convert(state=state)
-        with torch.no_grad():
+        input_layer: InputT = self.content_to_input_convert(state=state)
+        with torch.inference_mode():
             output_layer = self.scripted_net(input_layer)
 
         content_evaluation: Value = (
@@ -103,7 +103,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
         """
         self.scripted_net.eval()
-        with torch.no_grad():
+        with torch.inference_mode():
             # run the batch of input_converters into the NN and get the batch of output_converters
             output_layer = self.scripted_net(input_layer)
 

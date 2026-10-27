@@ -1,7 +1,5 @@
 """Generic transformer value model for padded entity-token inputs."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Literal, cast
 

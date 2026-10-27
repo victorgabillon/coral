@@ -1,14 +1,18 @@
 """Factory helpers for output value converters."""
 
+from typing import TYPE_CHECKING
+
 from coral.board_evaluation import PointOfView
-from coral.neural_networks.output_converters.model_output_type import (
-    ModelOutputType,
-)
 from coral.neural_networks.output_converters.output_value_converter import (
     IdentityConverter,
     PlayerToMoveValueToValueWhiteConverter,
     TurnOutputValueConverter,
 )
+
+if TYPE_CHECKING:
+    from coral.neural_networks.output_converters.model_output_type import (
+        ModelOutputType,
+    )
 
 
 class OutputConverterError(ValueError):

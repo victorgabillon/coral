@@ -16,14 +16,19 @@ Coral provides a flexible framework for building and deploying neural networks t
 ## Installation
 
 ```bash
-pip install git+https://github.com/victorgabillon/coral.git@main
+pip install algorhino-coral==0.2.0
 ```
+
+Release 0.2.0 uses the published `valanga==0.3.0`. Run
+`tox --workdir /path/to/private/coral-tox` for complete validation.
+`requirements/validation-py314.txt` pins the verified public Valanga wheel and
+stable CPU PyTorch artifact by URL and SHA-256 for both local tox and CI.
 
 ### Requirements
 
-- Python >= 3.13
-- PyTorch
-- valanga (board game library)
+- Python >= 3.14; validated with standard CPython 3.14.10, GIL enabled, `PYTHON_JIT=0`
+- PyTorch >= 2.14.1 (2.14.1+cpu is validated; no release candidate)
+- Valanga 0.3.0
 
 ## Project Structure
 
@@ -33,7 +38,7 @@ src/coral/
 ├── chi_nn.py                     # Base neural network class
 └── neural_networks/
     ├── factory.py                # NN factory pattern
-    ├── nn_content_evaluator.py   # Board evaluation with NNs
+    ├── nn_state_evaluator.py   # Board evaluation with NNs
     ├── models/                   # NN architectures (MLP, Transformer)
     ├── input_converters/         # Board to tensor conversion
     └── output_converters/        # NN output to evaluation conversion

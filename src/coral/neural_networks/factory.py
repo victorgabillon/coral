@@ -12,6 +12,7 @@ from valanga import HasTurn
 from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
     ContentToInputFunction,
+    ModelInput,
 )
 from coral.neural_networks.models.entity_token_transformer_value_net import (
     EntityTokenTransformerValueNet,
@@ -32,9 +33,7 @@ from coral.neural_networks.models.transformer_one import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
-from coral.neural_networks.nn_model_type_args import (
-    NNModelTypeArgs,
-)
+from coral.neural_networks.nn_model_type_args import NNModelTypeArgs
 from coral.neural_networks.nn_state_evaluator import (
     NNBWStateEvaluator,
 )
@@ -77,7 +76,7 @@ class NeuralNetModelsAndArchitecture:
     @classmethod
     def build_from_folder_path(
         cls, folder_path: MyPath
-    ) -> "NeuralNetModelsAndArchitecture":
+    ) -> NeuralNetModelsAndArchitecture:
         """Build an instance of NeuralNetModelsAndArchitecture from the given folder path.
 
         Args:
@@ -235,10 +234,13 @@ def create_nn_from_folder_path_and_existing_model(
     )
 
 
-def create_nn_content_eval_from_folder_path_and_existing_model[StateT: HasTurn](
+def create_nn_content_eval_from_folder_path_and_existing_model[
+    StateT: HasTurn,
+    InputT: ModelInput,
+](
     path_to_nn_folder: MyPath,
-    content_to_input_convert: ContentToInputFunction[StateT],
-) -> tuple[NNBWStateEvaluator[StateT], NeuralNetArchitectureArgs]:
+    content_to_input_convert: ContentToInputFunction[StateT, InputT],
+) -> tuple[NNBWStateEvaluator[StateT, InputT], NeuralNetArchitectureArgs]:
     """Create a neural network content evaluator.
 
     Args:
@@ -263,11 +265,14 @@ def create_nn_content_eval_from_folder_path_and_existing_model[StateT: HasTurn](
     return nn_state_evaluator, nn_architecture_args
 
 
-def create_nn_state_eval_from_nn_and_architecture_args[StateT: HasTurn](
+def create_nn_state_eval_from_nn_and_architecture_args[
+    StateT: HasTurn,
+    InputT: ModelInput,
+](
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction[StateT],
+    content_to_input_convert: ContentToInputFunction[StateT, InputT],
     nn: ChiNN,
-) -> NNBWStateEvaluator[StateT]:
+) -> NNBWStateEvaluator[StateT, InputT]:
     """Create a neural network state evaluator from architecture arguments.
 
     Args:
@@ -290,10 +295,10 @@ def create_nn_state_eval_from_nn_and_architecture_args[StateT: HasTurn](
     )
 
 
-def create_nn_state_eval_from_architecture_args[StateT: HasTurn](
+def create_nn_state_eval_from_architecture_args[StateT: HasTurn, InputT: ModelInput](
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction[StateT],
-) -> NNBWStateEvaluator[StateT]:
+    content_to_input_convert: ContentToInputFunction[StateT, InputT],
+) -> NNBWStateEvaluator[StateT, InputT]:
     """Create a neural network state evaluator from architecture arguments.
 
     Args:
@@ -314,11 +319,14 @@ def create_nn_state_eval_from_architecture_args[StateT: HasTurn](
     )
 
 
-def create_nn_state_eval_from_nn_parameters_file_and_existing_model[StateT: HasTurn](
+def create_nn_state_eval_from_nn_parameters_file_and_existing_model[
+    StateT: HasTurn,
+    InputT: ModelInput,
+](
     model_weights_file_name: MyPath,
     nn_architecture_args: NeuralNetArchitectureArgs,
-    content_to_input_convert: ContentToInputFunction[StateT],
-) -> NNBWStateEvaluator[StateT]:
+    content_to_input_convert: ContentToInputFunction[StateT, InputT],
+) -> NNBWStateEvaluator[StateT, InputT]:
     """Create a neural network state evaluator from a parameters file and architecture arguments.
 
     Args:

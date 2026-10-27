@@ -1,10 +1,13 @@
 """Logging helpers for the coral package."""
 
 import logging
-from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from rich.logging import RichHandler
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 coral_logger = logging.getLogger("coral_app")
 coral_logger.setLevel(logging.DEBUG)

@@ -1,8 +1,7 @@
-# mypy: ignore-errors
 """Transformer-based neural network model for board evaluation."""
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 import chess
 import torch
@@ -118,9 +117,9 @@ class MultiHeadAttention(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Compute multi-head attention output for the input tensor."""
-        out: torch.Tensor = torch.empty(1)  # to make mypy and jit happy
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
-        return self.dropout(self.proj(out))
+        out: torch.Tensor = torch.cat([h(x) for h in self.heads], dim=-1)
+        projected: torch.Tensor = self.dropout(self.proj(out))
+        return projected
 
 
 class FeedFoward(nn.Module):
@@ -163,7 +162,8 @@ class Block(nn.Module):
         """Run the transformer block forward pass."""
         y = self.sa(self.ln1(x))
         x = x + y
-        return x + self.ffwd(self.ln2(x))
+        output: torch.Tensor = x + self.ffwd(self.ln2(x))
+        return output
 
 
 class TransformerOne(ChiNN):
@@ -196,7 +196,7 @@ class TransformerOne(ChiNN):
         # TODO: fix the weird init_weights logics
         return
 
-    def _init_weights(self, module: Any) -> None:
+    def _init_weights(self, module: nn.Module) -> None:
         """Initialize linear layer weights and biases."""
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
@@ -211,9 +211,10 @@ class TransformerOne(ChiNN):
         z = self.blocks(y)  # (B,T,C)
         x: torch.Tensor = self.lm_head(z.flatten(start_dim=1))  # (B,T,vocab_size)
 
-        return self.tan_h(x)
+        output: torch.Tensor = self.tan_h(x)
+        return output
 
-    def get_nn_input(self, node: Any) -> None:
+    def get_nn_input(self, node: object) -> None:
         """Get the input tensor for the given node.
 
         Args:
