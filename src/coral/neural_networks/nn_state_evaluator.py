@@ -12,6 +12,7 @@ from valanga.evaluations import Value
 from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
     ContentToInputFunction,
+    ModelInput,
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     OutputValueConverter,
@@ -19,12 +20,12 @@ from coral.neural_networks.output_converters.output_value_converter import (
 )
 
 
-class NNStateEvaluator[StateT: HasTurn](Protocol):
+class NNStateEvaluator[StateT: HasTurn, InputT: ModelInput = torch.Tensor](Protocol):
     """Protocol for Neural Network Content Evaluator."""
 
     net: ChiNN
     output_and_value_converter: OutputValueConverter
-    content_to_input_convert: ContentToInputFunction[StateT]
+    content_to_input_convert: ContentToInputFunction[StateT, InputT]
 
     @abstractmethod
     def evaluate(self, state: StateT) -> Value:  # pylint: disable=unused-argument
@@ -32,7 +33,7 @@ class NNStateEvaluator[StateT: HasTurn](Protocol):
         ...
 
 
-class NNBWStateEvaluator[StateT: HasTurn]:
+class NNBWStateEvaluator[StateT: HasTurn, InputT: ModelInput = torch.Tensor]:
     """The Generic Neural network class for board evaluation.
 
     Attributes:
@@ -44,13 +45,13 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
     net: ChiNN
     output_and_value_converter: TurnOutputValueConverter
-    content_to_input_convert: ContentToInputFunction[StateT]
+    content_to_input_convert: ContentToInputFunction[StateT, InputT]
 
     def __init__(
         self,
         net: ChiNN,
         output_and_value_converter: TurnOutputValueConverter,
-        content_to_input_convert: ContentToInputFunction[StateT],
+        content_to_input_convert: ContentToInputFunction[StateT, InputT],
         script: bool = True,
     ) -> None:
         """Initialize the NNBoardEvaluator.
@@ -79,7 +80,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
             Value: The value for the white player.
 
         """
-        input_layer: torch.Tensor = self.content_to_input_convert(state=state)
+        input_layer: InputT = self.content_to_input_convert(state=state)
         with torch.inference_mode():
             output_layer = self.scripted_net(input_layer)
 

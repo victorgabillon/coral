@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from coral.neural_networks.input_converters.content_to_input import (
         ContentToInput,
         ContentToInputFunction,
+        ModelInput,
     )
     from coral.neural_networks.nn_state_evaluator import (
         NNBWStateEvaluator,
@@ -54,3 +55,17 @@ def evaluator_contract(evaluator: NNBWStateEvaluator[Position]) -> torch.Tensor:
 def protocol_input(evaluator: NNStateEvaluator[Position], state: Position) -> float:
     """Couple evaluation and conversion to one state type."""
     return evaluator.evaluate(state).score
+
+
+def converter_result_covariance(
+    converter: ContentToInputFunction[Position, torch.Tensor],
+) -> ContentToInputFunction[Position, ModelInput]:
+    """Widen a converter's result while preserving its state input."""
+    return converter
+
+
+def legacy_indexed_input(
+    evaluator: NNBWStateEvaluator[Position, list[list[int]]], state: Position
+) -> list[list[int]]:
+    """Retain the indexed input used by the existing TransformerOne model."""
+    return evaluator.content_to_input_convert(state=state)

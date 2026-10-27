@@ -5,12 +5,16 @@ from typing import Protocol, runtime_checkable
 import torch
 from valanga import HasTurn
 
+type ModelInput = torch.Tensor | list[list[int]]
+
 
 @runtime_checkable
-class ContentToInputFunction[StateT: HasTurn](Protocol):
+class ContentToInputFunction[StateT: HasTurn, InputT: ModelInput = torch.Tensor](
+    Protocol
+):
     """Protocol for a callable object that converts a chess board to a tensor input for a neural network."""
 
-    def __call__(self, state: StateT) -> torch.Tensor:
+    def __call__(self, state: StateT) -> InputT:
         """Convert the given chess board to a tensor input.
 
         Args:

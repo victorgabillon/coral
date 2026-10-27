@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .contracts import Position
 
 bad_converter: ContentToInputFunction[object]  # expect-error
+bad_input: ContentToInputFunction[Position, str]  # expect-error
 bad_method: ContentToInput[object]  # expect-error
 bad_evaluator: NNBWStateEvaluator[object]  # expect-error
 bad_protocol: NNStateEvaluator[object]  # expect-error

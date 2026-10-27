@@ -14,6 +14,7 @@ from coral.neural_networks.models.multi_layer_perceptron import (
     MultiLayerPerceptron,
     MultiLayerPerceptronArgs,
 )
+from coral.neural_networks.models.transformer_one import TransformerArgs, TransformerOne
 from coral.neural_networks.neural_net_architecture_args import NeuralNetArchitectureArgs
 from coral.neural_networks.nn_model_type import ActivationFunctionType, NNModelType
 from coral.neural_networks.nn_state_evaluator import NNBWStateEvaluator
@@ -43,7 +44,9 @@ def test_deferred_public_annotations_resolve_at_runtime() -> None:
     """Keep dacite and evaluator introspection working with native annotations."""
     assert get_type_hints(NeuralNetArchitectureArgs)["model_type_args"] is not None
     assert get_type_hints(ModelOutputType)["point_of_view"] is not None
-    assert get_type_hints(ContentToInputFunction.__call__)["return"] is torch.Tensor
+    input_type = ContentToInputFunction.__type_params__[1]
+    assert input_type.__default__ is torch.Tensor
+    assert get_type_hints(ContentToInputFunction.__call__)["return"] is input_type
     for target in (
         factory.create_nn,
         factory.create_nn_from_param_path_and_architecture_args,
@@ -120,3 +123,18 @@ def test_standard_module_pickling_omits_transient_compiler_state(
     assert list(restored.state_dict()) == keys
     with torch.no_grad():
         torch.testing.assert_close(restored(inputs), expected, rtol=0, atol=0)
+
+
+def test_existing_indexed_transformer_evaluator_contract() -> None:
+    """Keep the legacy indexed-input evaluator operational with precise typing."""
+    model = TransformerOne(TransformerArgs(n_embd=12, n_head=3, n_layer=1)).eval()
+    indices = [list(range(65))]
+
+    def convert(state: _Position) -> list[list[int]]:
+        assert state.turn == Color.WHITE
+        return indices
+
+    evaluator = NNBWStateEvaluator(model, IdentityConverter(), convert, script=False)
+    with torch.no_grad():
+        expected = model(indices).item()
+    assert evaluator.evaluate(_Position()).score == expected
