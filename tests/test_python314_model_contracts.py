@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, get_type_hints
 
+import pytest
 import torch
 from valanga import Color
 
@@ -44,13 +45,18 @@ def test_deferred_public_annotations_resolve_at_runtime() -> None:
     assert get_type_hints(ContentToInputFunction.__call__)["return"] is torch.Tensor
 
 
-def test_existing_state_dictionary_and_torchscript_roundtrip(tmp_path: Path) -> None:
+@pytest.mark.parametrize("legacy", [False, True])
+def test_existing_state_dictionary_and_torchscript_roundtrip(
+    tmp_path: Path, legacy: bool
+) -> None:
     """Load existing weights on CPU and retain the scripted MLP evaluation path."""
     torch.manual_seed(314)
     original = _model().eval()
     inputs = torch.randn(4, 5)
     weights = tmp_path / "weights.pt"
-    torch.save(original.state_dict(), weights)
+    torch.save(
+        original.state_dict(), weights, _use_new_zipfile_serialization=not legacy
+    )
     restored = _model().eval()
     restored.load_weights_from_file(weights)
     scripted = torch.jit.script(restored)
@@ -82,3 +88,21 @@ def test_evaluator_inference_retains_values_and_input_gradients() -> None:
     assert torch.is_grad_enabled()
     assert inputs.requires_grad
     assert inputs.grad is None
+
+
+def test_standard_module_pickling_omits_transient_compiler_state(
+    tmp_path: Path,
+) -> None:
+    """Retain normal full-model serialization after an opt-in compile wrapper."""
+    model = _model().eval()
+    inputs = torch.randn(2, 5)
+    with torch.no_grad():
+        expected = model(inputs)
+    keys = list(model.state_dict())
+    model.compile(backend="eager")
+    artifact = tmp_path / "compiled-model.pt"
+    torch.save(model, artifact)
+    restored = torch.load(artifact, weights_only=False, map_location="cpu")
+    assert list(restored.state_dict()) == keys
+    with torch.no_grad():
+        torch.testing.assert_close(restored(inputs), expected, rtol=0, atol=0)

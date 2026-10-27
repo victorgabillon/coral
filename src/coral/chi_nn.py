@@ -13,15 +13,6 @@ from coral.utils.small_tools import MyPath, resolve_package_path
 class ChiNN(nn.Module):
     """The Generic Neural network class of chipiron."""
 
-    def __getstate__(self) -> dict[str, object]:
-        """Get the state of the object for pickling.
-
-        Returns:
-            dict: The state dictionary of the object.
-
-        """
-        return self.__dict__.copy()
-
     def init_weights(self) -> None:
         """Initialize the weights of the model."""
         raise NotImplementedError("not implemented in base class")
