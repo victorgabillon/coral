@@ -73,7 +73,7 @@ useful research features; current dirty Chipiron research code references those
 absent APIs. Duplicate encoder implementations are obsolete; extra scale-boundary
 tests remain useful candidates. No saved patch was automatically applied.
 
-The tested preview is `algorhino-coral==0.1.16.dev0`, wheel SHA-256
+The original tested preview is `algorhino-coral==0.1.16.dev0`, wheel SHA-256
 `dce8b5d6cb8d0ae183bc0442cc087122c8168672d895cdfaee346ec3fd454876`.
 All 24 packaged source/typing files match Git and the installed test environment.
 Recommend final distribution **0.2.0** for Python 3.14-only support. Before
@@ -82,6 +82,14 @@ rebuild final-version wheels, rerun resolver/full release tests and obtain remot
 CI/review. Exact requested foundation-commit wheels retain old version labels
 and remain explicitly selected for migration validation. Coral does not bundle
 Anemone; integration with its full validated Morpion implementation passed.
+
+The subsequent 0.2.0 release candidate applies the published Valanga 0.3.0
+metadata alignment. Local tox and the reusable CI/release workflow now select
+the published Valanga wheel and stable PyTorch 2.14.1 CPU wheel by URL and
+SHA-256 through `requirements/validation-py314.txt`; development wheel
+environment variables are no longer required. The preview evidence above
+remains the frozen migration reference. Publication still requires
+protected-branch integration and passing remote checks.
 
 Full local evidence, immutable wheels, numerical fixtures, performance ranges,
 preservation comparison and Chipiron recommendations are in

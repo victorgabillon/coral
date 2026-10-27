@@ -41,19 +41,7 @@ jobs:
         run: |
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main
           python -c 'import os, tomllib; version = tomllib.load(open("pyproject.toml", "rb"))["project"]["version"]; assert os.environ["GITHUB_REF_NAME"] == "v" + version'
-      - name: Check out validated valanga
-        uses: actions/checkout@v7.0.1
-        with:
-          repository: victorgabillon/valanga
-          ref: 1036202ca15432de6cfb8da2c7a3cdf99f12be49
-          path: .ci-foundations/valanga
-      - name: Build exact valanga wheel
-        run: |
-          python -m build --wheel --outdir "$RUNNER_TEMP/valanga-dist" .ci-foundations/valanga
-          echo "VALANGA_WHEEL=$RUNNER_TEMP/valanga-dist/valanga-0.2.5-py3-none-any.whl" >> "$GITHUB_ENV"
-      - name: Select exact stable CPU PyTorch artifact
-        run: echo 'TORCH_WHEEL=https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl#sha256=35103e180214793207f95d7e12e100ecba3ace6f5fb37e1fcefbb07e096ed180' >> "$GITHUB_ENV"
-      - name: Run complete test, lint, typecheck and build environments
+      - name: Validate against hash-pinned published artifacts
         run: tox --workdir "$RUNNER_TEMP/tox" -p 2 -o --parallel-no-spinner
       - name: Retain validation evidence
         if: always()

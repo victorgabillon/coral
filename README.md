@@ -16,20 +16,19 @@ Coral provides a flexible framework for building and deploying neural networks t
 ## Installation
 
 ```bash
-pip install git+https://github.com/victorgabillon/coral.git@main
+pip install algorhino-coral==0.2.0
 ```
 
-The next distribution is `algorhino-coral 0.1.16`; this branch builds
-`0.1.16.dev0` and has not been published. Development tox requires
-`VALANGA_WHEEL` and `TORCH_WHEEL` paths to verified artifacts. Run
-`tox --workdir /path/to/private/coral-tox` so generated files stay outside
-the checkout. CI pins the stable CPU PyTorch artifact by URL and SHA-256.
+Release 0.2.0 uses the published `valanga==0.3.0`. Run
+`tox --workdir /path/to/private/coral-tox` for complete validation.
+`requirements/validation-py314.txt` pins the verified public Valanga wheel and
+stable CPU PyTorch artifact by URL and SHA-256 for both local tox and CI.
 
 ### Requirements
 
-- Standard CPython 3.14.10, GIL enabled, `PYTHON_JIT=0`
+- Python >= 3.14; validated with standard CPython 3.14.10, GIL enabled, `PYTHON_JIT=0`
 - PyTorch >= 2.14.1 (2.14.1+cpu is validated; no release candidate)
-- Exact Python 3.14 Valanga wheel, selected by `VALANGA_WHEEL`
+- Valanga 0.3.0
 
 ## Project Structure
 
