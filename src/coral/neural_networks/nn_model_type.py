@@ -1,9 +1,12 @@
 """Defines the neural network model and activation function types."""
 
-from collections.abc import Callable
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from torch import nn
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class NNModelType(StrEnum):

@@ -1,14 +1,11 @@
 """Module for the Neural Network Board Evaluator."""
 
 from abc import abstractmethod
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import torch
 from valanga import (
     HasTurn,
-)
-from valanga.evaluations import (
-    Value,
 )
 
 from coral.chi_nn import ChiNN
@@ -17,11 +14,19 @@ from coral.neural_networks.input_converters.content_to_input import (
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     OutputValueConverter,
-    TurnOutputValueConverter,
 )
 
+if TYPE_CHECKING:
+    from valanga.evaluations import (
+        Value,
+    )
 
-class NNStateEvaluator[StateT](Protocol):
+    from coral.neural_networks.output_converters.output_value_converter import (
+        TurnOutputValueConverter,
+    )
+
+
+class NNStateEvaluator[StateT: HasTurn](Protocol):
     """Protocol for Neural Network Content Evaluator."""
 
     net: ChiNN
@@ -66,7 +71,8 @@ class NNBWStateEvaluator[StateT: HasTurn]:
         """
         self.net = net
         self.scripted_net = torch.jit.script(net) if script else net
-        self.net.eval()  # do once
+        self.net.eval()
+        self.scripted_net.eval()
         self.output_and_value_converter = output_and_value_converter
         self.content_to_input_convert = content_to_input_convert
 
@@ -81,7 +87,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
         """
         input_layer: torch.Tensor = self.content_to_input_convert(state=state)
-        with torch.no_grad():
+        with torch.inference_mode():
             output_layer = self.scripted_net(input_layer)
 
         content_evaluation: Value = (
@@ -103,7 +109,7 @@ class NNBWStateEvaluator[StateT: HasTurn]:
 
         """
         self.scripted_net.eval()
-        with torch.no_grad():
+        with torch.inference_mode():
             # run the batch of input_converters into the NN and get the batch of output_converters
             output_layer = self.scripted_net(input_layer)
 

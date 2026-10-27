@@ -1,7 +1,5 @@
 """Relation-biased transformer value model for padded entity tokens."""
 
-from __future__ import annotations
-
 import math
 from dataclasses import dataclass
 from typing import Literal
@@ -38,18 +36,16 @@ class RelationBiasedEntityTokenTransformerValueNetArgs(
 
     def __str__(self) -> str:
         """Return a readable summary including the relation vocabulary size."""
+        base = (
+            super()
+            .__str__()
+            .removeprefix("EntityTokenTransformerValueNetArgs(")
+            .removesuffix(")")
+        )
         return (
-            f"RelationBiasedEntityTokenTransformerValueNetArgs("
-            f"input_feature_dim={self.input_feature_dim}, "
-            f"d_model={self.d_model}, "
-            f"n_head={self.n_head}, "
-            f"n_layer={self.n_layer}, "
-            f"dim_feedforward={self.dim_feedforward}, "
-            f"dropout_ratio={self.dropout_ratio}, "
-            f"pooling={self.pooling}, "
-            f"use_validity_feature={self.use_validity_feature}, "
-            f"output_tanh={self.output_tanh}, "
-            f"num_relation_types={self.num_relation_types})"
+            f"RelationBiasedEntityTokenTransformerValueNetArgs({base}, "
+            f"num_relation_types={self.num_relation_types}, "
+            f"relation_bias_scale={self.relation_bias_scale})"
         )
 
     def filename(self) -> str:
@@ -123,11 +119,10 @@ class RelationBiasedEntityTokenTransformerValueNet(EntityTokenTransformerValueNe
         learned value token is present. The dense mask uses quadratic sequence
         memory and is intended as the minimal correctness-first implementation.
         """
-        relation_types = relation_triples[..., 2]
-        if torch.any(relation_types < 0):
+        if torch.any(relation_triples[..., 2] < 0):
             raise ValueError
 
-        active = relation_types > 0
+        active = relation_triples[..., 2] > 0
         if not torch.any(active):
             return None
 
@@ -139,17 +134,15 @@ class RelationBiasedEntityTokenTransformerValueNet(EntityTokenTransformerValueNe
         active_triples = relation_triples[active]
         source_indices = active_triples[:, 0]
         destination_indices = active_triples[:, 1]
-        active_relation_types = active_triples[:, 2]
-        entity_token_count = valid_entity_tokens.shape[1]
 
-        if torch.any(active_relation_types >= self.args.num_relation_types):
+        if torch.any(active_triples[:, 2] >= self.args.num_relation_types):
             raise ValueError
         if torch.any(source_indices < 0) or torch.any(
-            source_indices >= entity_token_count
+            source_indices >= valid_entity_tokens.shape[1]
         ):
             raise ValueError
         if torch.any(destination_indices < 0) or torch.any(
-            destination_indices >= entity_token_count
+            destination_indices >= valid_entity_tokens.shape[1]
         ):
             raise ValueError
         if torch.any(~valid_entity_tokens[active_batch_indices, source_indices]):
@@ -160,33 +153,30 @@ class RelationBiasedEntityTokenTransformerValueNet(EntityTokenTransformerValueNe
         if self.args.relation_bias_scale == 0:
             return None
         bias_per_relation = (
-            self.relation_bias(active_relation_types) * self.args.relation_bias_scale
-        )
-        relation_count = active_triples.shape[0]
-        head_count = self.args.n_head
-        head_indices = torch.arange(head_count, device=device).expand(
-            relation_count, head_count
+            self.relation_bias(active_triples[:, 2]) * self.args.relation_bias_scale
         )
         entity_index_offset = int(self.args.use_value_token)
-
-        batch_indices = active_batch_indices.unsqueeze(1).expand(-1, head_count)
-        source_indices = source_indices.unsqueeze(1).expand(-1, head_count)
-        destination_indices = destination_indices.unsqueeze(1).expand(-1, head_count)
-
-        flat_batch_indices = batch_indices.reshape(-1)
-        flat_head_indices = head_indices.reshape(-1)
-        flat_source_indices = (source_indices + entity_index_offset).reshape(-1)
-        flat_destination_indices = (destination_indices + entity_index_offset).reshape(
-            -1
-        )
+        # Broadcast relation rows against heads, retaining the original row-major
+        # index_add order (including duplicate relations and their gradients).
         flat_attention_indices = (
-            (flat_batch_indices * head_count + flat_head_indices) * sequence_length
-            + flat_source_indices
-        ) * sequence_length + flat_destination_indices
-
-        batch_size = relation_triples.shape[0]
+            (
+                (
+                    active_batch_indices.unsqueeze(1) * self.args.n_head
+                    + torch.arange(self.args.n_head, device=device)
+                )
+                * sequence_length
+                + source_indices.unsqueeze(1)
+                + entity_index_offset
+            )
+            * sequence_length
+            + destination_indices.unsqueeze(1)
+            + entity_index_offset
+        ).reshape(-1)
         flat_attention_bias = torch.zeros(
-            batch_size * head_count * sequence_length * sequence_length,
+            relation_triples.shape[0]
+            * self.args.n_head
+            * sequence_length
+            * sequence_length,
             dtype=dtype,
             device=device,
         )
@@ -196,15 +186,17 @@ class RelationBiasedEntityTokenTransformerValueNet(EntityTokenTransformerValueNe
             bias_per_relation.to(dtype=dtype).reshape(-1),
         )
         return flat_attention_bias.reshape(
-            batch_size * head_count,
+            relation_triples.shape[0] * self.args.n_head,
             sequence_length,
             sequence_length,
         )
 
-    def forward(  # type: ignore[override]
-        self, x: torch.Tensor, relation_triples: torch.Tensor
+    def forward(
+        self, x: torch.Tensor, relation_triples: torch.Tensor | None = None
     ) -> torch.Tensor:
         """Evaluate tokens and sparse directed ``[source, destination, type]`` rows."""
+        if relation_triples is None:
+            raise TypeError
         hidden, safe_padding_mask, valid_tokens, was_unbatched = (
             self._prepare_encoder_inputs(x)
         )

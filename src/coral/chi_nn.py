@@ -13,10 +13,6 @@ from coral.utils.small_tools import MyPath, resolve_package_path
 class ChiNN(nn.Module):
     """The Generic Neural network class of chipiron."""
 
-    def __init__(self) -> None:
-        """Initialize an instance of the ChiNN class."""
-        super().__init__()
-
     def __getstate__(self) -> dict[str, object]:
         """Get the state of the object for pickling.
 
@@ -40,14 +36,14 @@ class ChiNN(nn.Module):
         coral_logger.info("load_or_init_weights from %s", path_to_param_file)
         try:  # load
             resolved_path = resolve_package_path(str(path_to_param_file))
-            with open(resolved_path, "rb") as file_nnr:
-                coral_logger.info("loading the existing param file %s", resolved_path)
-                if torch.cuda.is_available():
-                    self.load_state_dict(torch.load(file_nnr))
-                else:
-                    self.load_state_dict(
-                        torch.load(file_nnr, map_location=torch.device("cpu"))
-                    )
+            coral_logger.info("loading the existing param file %s", resolved_path)
+            self.load_state_dict(
+                torch.load(
+                    resolved_path,
+                    weights_only=True,
+                    map_location=None if torch.cuda.is_available() else "cpu",
+                )
+            )
 
         except OSError:  # init
             # Print the full traceback to stderr

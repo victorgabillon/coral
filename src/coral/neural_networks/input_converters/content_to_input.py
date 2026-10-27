@@ -1,22 +1,20 @@
 """Module for the BoardToInput protocol and BoardToInputFunction protocol."""
 
-from typing import Any, Protocol, TypeVar, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import torch
 from valanga import HasTurn
 
-StateT_contra = TypeVar("StateT_contra", bound=HasTurn, contravariant=True)
-
 
 @runtime_checkable
-class ContentToInputFunction[StateT_contra](Protocol):
+class ContentToInputFunction[StateT: HasTurn](Protocol):
     """Protocol for a callable object that converts a chess board to a tensor input for a neural network."""
 
-    def __call__(self, state: StateT_contra) -> Any:
+    def __call__(self, state: StateT) -> torch.Tensor:
         """Convert the given chess board to a tensor input.
 
         Args:
-            state (StateT_contra): The state with turn information to convert.
+            state (StateT): The state with turn information to convert.
 
         Returns:
             torch.Tensor: The tensor input representing the chess board.
@@ -25,14 +23,14 @@ class ContentToInputFunction[StateT_contra](Protocol):
         ...
 
 
-class ContentToInput[StateT_contra](Protocol):
+class ContentToInput[StateT: HasTurn](Protocol):
     """Protocol for converting a chess board to a tensor input for a neural network."""
 
-    def convert(self, content_with_turn: StateT_contra) -> torch.Tensor:
+    def convert(self, content_with_turn: StateT) -> torch.Tensor:
         """Convert the given chess board to a tensor input.
 
         Args:
-            content_with_turn (StateT_contra): The state with turn information to convert.
+            content_with_turn (StateT): The state with turn information to convert.
 
         Returns:
             torch.Tensor: The tensor input representing the chess board.

@@ -209,3 +209,5 @@ repo.zip
 
 # Per-run CI validation evidence
 .ci-reports/
+
+.ci-foundations/
