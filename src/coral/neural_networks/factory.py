@@ -9,6 +9,10 @@ from typing import TYPE_CHECKING, Any
 import dacite
 from valanga import HasTurn
 
+from coral.chi_nn import ChiNN
+from coral.neural_networks.input_converters.content_to_input import (
+    ContentToInputFunction,
+)
 from coral.neural_networks.models.entity_token_transformer_value_net import (
     EntityTokenTransformerValueNet,
     EntityTokenTransformerValueNetArgs,
@@ -28,6 +32,7 @@ from coral.neural_networks.models.transformer_one import (
 from coral.neural_networks.neural_net_architecture_args import (
     NeuralNetArchitectureArgs,
 )
+from coral.neural_networks.nn_model_type_args import NNModelTypeArgs
 from coral.neural_networks.nn_state_evaluator import (
     NNBWStateEvaluator,
 )
@@ -41,13 +46,6 @@ from coral.utils.small_tools import (
 )
 
 if TYPE_CHECKING:
-    from coral.chi_nn import ChiNN
-    from coral.neural_networks.input_converters.content_to_input import (
-        ContentToInputFunction,
-    )
-    from coral.neural_networks.nn_model_type_args import (
-        NNModelTypeArgs,
-    )
     from coral.neural_networks.output_converters.output_value_converter import (
         TurnOutputValueConverter,
     )

@@ -6,6 +6,7 @@ import pytest
 import torch
 from valanga import Color
 
+from coral.neural_networks import factory
 from coral.neural_networks.input_converters.content_to_input import (
     ContentToInputFunction,
 )
@@ -43,6 +44,19 @@ def test_deferred_public_annotations_resolve_at_runtime() -> None:
     assert get_type_hints(NeuralNetArchitectureArgs)["model_type_args"] is not None
     assert get_type_hints(ModelOutputType)["point_of_view"] is not None
     assert get_type_hints(ContentToInputFunction.__call__)["return"] is torch.Tensor
+    for target in (
+        factory.create_nn,
+        factory.create_nn_from_param_path_and_architecture_args,
+        factory.create_nn_from_folder_path_and_existing_model,
+        factory.create_nn_content_eval_from_folder_path_and_existing_model,
+        factory.create_nn_state_eval_from_nn_and_architecture_args,
+        factory.create_nn_state_eval_from_architecture_args,
+        factory.create_nn_state_eval_from_nn_parameters_file_and_existing_model,
+        NNBWStateEvaluator,
+        NNBWStateEvaluator.__init__,
+        NNBWStateEvaluator.evaluate,
+    ):
+        assert get_type_hints(target)
 
 
 @pytest.mark.parametrize("legacy", [False, True])

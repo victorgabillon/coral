@@ -1,12 +1,13 @@
 """Module for the Neural Network Board Evaluator."""
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
 import torch
 from valanga import (
     HasTurn,
 )
+from valanga.evaluations import Value
 
 from coral.chi_nn import ChiNN
 from coral.neural_networks.input_converters.content_to_input import (
@@ -14,16 +15,8 @@ from coral.neural_networks.input_converters.content_to_input import (
 )
 from coral.neural_networks.output_converters.output_value_converter import (
     OutputValueConverter,
+    TurnOutputValueConverter,
 )
-
-if TYPE_CHECKING:
-    from valanga.evaluations import (
-        Value,
-    )
-
-    from coral.neural_networks.output_converters.output_value_converter import (
-        TurnOutputValueConverter,
-    )
 
 
 class NNStateEvaluator[StateT: HasTurn](Protocol):

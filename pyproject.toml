@@ -147,7 +147,14 @@ lint.ignore = [ "E501","ANN401","TD003","TD002",
 
 # Configuration dataclasses and runtime protocols expose resolvable annotations.
 [tool.ruff.lint.flake8-type-checking]
-exempt-modules = ["typing", "torch"]
+exempt-modules = [
+  "coral.chi_nn",
+  "coral.neural_networks.input_converters.content_to_input",
+  "coral.neural_networks.nn_model_type_args",
+  "torch",
+  "typing",
+  "valanga.evaluations",
+]
 runtime-evaluated-decorators = ["dataclasses.dataclass", "typing.runtime_checkable"]
 runtime-evaluated-base-classes = ["typing.Protocol"]
 
